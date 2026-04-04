@@ -1,0 +1,45 @@
+model:
+  base_url: "http://localhost:1234/v1"
+  name: "qwen3.5-27b"
+  temperature: 0.7
+  max_tokens: 1500
+  api_key: "not-needed"
+
+num_consumers: 20
+max_turns: 10
+
+stock:
+  "iPhone 15": 5
+  "iPhone 15 Pro Max": 3
+  "Samsung Galaxy S24": 8
+  "Samsung Galaxy S24 Ultra": 4
+  "Google Pixel 8": 6
+  "Google Pixel 8 Pro": 4
+  "Xiaomi 14": 10
+  "Motorola Edge 40 Pro": 7
+  "OnePlus 12": 5
+  "Samsung Galaxy A55": 12
+
+cost_map:
+  "iPhone 15": 799
+  "iPhone 15 Pro Max": 1099
+  "Samsung Galaxy S24": 699
+  "Samsung Galaxy S24 Ultra": 1049
+  "Google Pixel 8": 549
+  "Google Pixel 8 Pro": 749
+  "Xiaomi 14": 399
+  "Motorola Edge 40 Pro": 449
+  "OnePlus 12": 599
+  "Samsung Galaxy A55": 249
+
+price_map:
+  "iPhone 15": 1099
+  "iPhone 15 Pro Max": 1499
+  "Samsung Galaxy S24": 949
+  "Samsung Galaxy S24 Ultra": 1399
+  "Google Pixel 8": 749
+  "Google Pixel 8 Pro": 999
+  "Xiaomi 14": 599
+  "Motorola Edge 40 Pro": 649
+  "OnePlus 12": 849
+  "Samsung Galaxy A55": 399
