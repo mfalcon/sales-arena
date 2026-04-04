@@ -118,6 +118,7 @@ def build_consumer_messages(
     The consumer's own messages become "assistant" and seller messages become "user".
     The first consumer message is folded into the system prompt to avoid starting
     with an assistant message (some model templates require user-first).
+    Ensures the last message is always "user" (required by some model templates).
     """
     messages = [{"role": "system", "content": system_prompt}]
 
@@ -133,6 +134,13 @@ def build_consumer_messages(
         else:
             messages.append({"role": "user", "content": turn.content})
 
+    # Ensure last message is "user" — some model templates require it
+    if not messages or messages[-1]["role"] != "user":
+        messages.append({
+            "role": "user",
+            "content": "Respondé como el cliente en esta conversación.",
+        })
+
     return messages
 
 
@@ -140,16 +148,11 @@ def build_consumer_messages(
 
 SELLER_CONTEXT_TEMPLATE = (
     "{seller_prompt}\n\n"
-    "=== CATÁLOGO ===\n{catalog}\n\n"
-    "=== REGLAS DE NEGOCIO (OBLIGATORIAS) ===\n{constraints}\n\n"
-    "=== STOCK ACTUAL ===\n{stock}\n\n"
-    "=== OTRAS CONVERSACIONES EN CURSO ===\n{other_conversations}\n\n"
-    "INSTRUCCIONES:\n"
-    "- Respondé de forma natural, como en un chat de WhatsApp. Mensajes cortos.\n"
-    "- NO uses formato JSON ni markdown. Hablá como una persona normal.\n"
-    "- NUNCA violes las reglas de negocio.\n"
-    "- Si un producto se agotó, ofrecé alternativas.\n"
-    "- Intentá cerrar la venta pero sin ser agresivo."
+    "CATÁLOGO:\n{catalog}\n\n"
+    "REGLAS:\n{constraints}\n\n"
+    "STOCK:\n{stock}\n\n"
+    "OTROS CHATS:\n{other_conversations}\n\n"
+    "Respondé natural, como WhatsApp. Mensajes cortos. No uses JSON ni markdown."
 )
 
 

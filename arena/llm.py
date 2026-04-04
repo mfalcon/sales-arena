@@ -48,28 +48,82 @@ class LLMClient:
         Returns:
             Response content as string.
         """
-        msgs = list(messages)
+        msgs = _sanitize_messages(list(messages))
 
         if json_mode:
             msgs.append({"role": "assistant", "content": "{"})
 
-        response = self._client.chat.completions.create(
-            model=self.model,
-            messages=msgs,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
+        # Retry up to 2 times on empty responses, bump temperature on retries
+        content = ""
+        for attempt in range(3):
+            temp = min(self.temperature + (attempt * 0.3), 1.5)
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=msgs,
+                temperature=temp,
+                max_tokens=self.max_tokens,
+            )
 
-        content = response.choices[0].message.content
+            content = response.choices[0].message.content or ""
+
+            if response.usage:
+                self.usage.prompt_tokens += response.usage.prompt_tokens
+                self.usage.completion_tokens += response.usage.completion_tokens
+
+            if content.strip():
+                break
 
         if json_mode:
             content = "{" + content
 
-        if response.usage:
-            self.usage.prompt_tokens += response.usage.prompt_tokens
-            self.usage.completion_tokens += response.usage.completion_tokens
-
         return content
+
+
+def _sanitize_messages(messages: list[dict]) -> list[dict]:
+    """Ensure messages follow the user/assistant alternation pattern.
+
+    Some model templates (Qwen, Gemma) are strict about:
+    - First non-system message must be "user"
+    - Messages must alternate user/assistant
+    - Last message before generation must be "user"
+
+    This function merges consecutive same-role messages and ensures
+    the conversation starts with "user" and ends with "user".
+    """
+    if not messages:
+        return messages
+
+    # Separate system messages from the rest, skip empty content
+    system_msgs = [m for m in messages if m["role"] == "system"]
+    chat_msgs = [
+        m for m in messages
+        if m["role"] != "system" and m.get("content", "").strip()
+    ]
+
+    if not chat_msgs:
+        return messages
+
+    # Merge consecutive same-role messages
+    merged = []
+    for msg in chat_msgs:
+        if merged and merged[-1]["role"] == msg["role"]:
+            merged[-1]["content"] += "\n\n" + msg["content"]
+        else:
+            merged.append(dict(msg))
+
+    # Ensure first message is "user"
+    if merged[0]["role"] != "user":
+        if system_msgs:
+            system_msgs[-1]["content"] += "\n\n" + merged[0]["content"]
+            merged = merged[1:]
+        else:
+            merged[0]["role"] = "user"
+
+    # Ensure last message is "user"
+    if merged and merged[-1]["role"] != "user":
+        merged.append({"role": "user", "content": "Continuá la conversación."})
+
+    return system_msgs + merged
 
 
 # --- JSON Parser ---

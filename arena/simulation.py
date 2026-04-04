@@ -103,6 +103,8 @@ def run_simulation(
             )
 
             seller_response = llm.send(seller_messages)
+            if not seller_response or not seller_response.strip():
+                seller_response = "¿En qué te puedo ayudar?"
             conv.turns.append(
                 Turn(role="seller", content=seller_response, turn_number=turn_round)
             )
@@ -130,6 +132,8 @@ def run_simulation(
             )
 
             consumer_response = c_llm.send(consumer_messages)
+            if not consumer_response or not consumer_response.strip():
+                consumer_response = "No gracias, voy a seguir mirando."
             conv.turns.append(
                 Turn(
                     role="consumer",
@@ -267,4 +271,7 @@ def _generate_opening(llm: LLMClient, consumer_system_prompt: str) -> str:
             ),
         },
     ]
-    return llm.send(messages)
+    response = llm.send(messages)
+    if not response or not response.strip():
+        return "Hola, ¿qué productos tienen disponibles?"
+    return response

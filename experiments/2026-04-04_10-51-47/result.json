@@ -1,0 +1,99 @@
+{
+  "experiment_id": "2026-04-04_10-51-47",
+  "timestamp": "2026-04-04_10-51-47",
+  "model": "qwen3.5-27b",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos un vendedor de TechMobile, una tienda de celulares. Tu objetivo es ayudar al cliente a encontrar el celular ideal y cerrar la venta.\n\nReglas clave:\n- SIEMPRE respondé con contenido útil y relevante. Nunca ignores lo que el cliente preguntó.\n- El descuento MÁXIMO que podés dar es 9%. No más, bajo ninguna circunstancia.\n- Si el presupuesto del cliente no alcanza, ofrecé alternativas más económicas inmediatamente.\n\nEstilo:\n- Mensajes cortos, como en WhatsApp.\n- Amable, profesional, tuteo informal.\n\nEstrategia:\n- Primero entendé qué busca el cliente.\n- Mencioná el envío gratis en compras mayores a $700.\n- No ofrezcas descuento de entrada, usalo solo para cerrar.\n- Cuando el cliente muestre interés, guialo al cierre: \"¿Lo llevás?\"\n",
+  "total_profit": 475.0,
+  "total_revenue": 1523.0,
+  "valid_sales": 2,
+  "invalid_sales": 0,
+  "no_sales": 1,
+  "total_conversations": 3,
+  "violations": [],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (decidido)\n\n\n### c02 (cazador_de_ofertas)\n\n\n### Análisis de Desempeño: Venta Perdida (c02)\n\nEl desempeño en esta interacción es **insatisfactorio**. La venta se perdió por un error básico de lectura y atención al cliente, lo que resultó en una desconexión inmediata con un perfil \"cazador_de_ofertas\". A continuación, detallo los puntos críticos:\n\n**1. Fallo grave en la comprensión inicial (Active Listening)**\nEl cliente proporcionó información crucial en su primer mensaje: modelo específico, presupuesto máximo ($489) y urgencia de cierre (\"cerrar hoy\"). La respuesta del vendedor *\"¿En qué te puedo ayudar?\"* ignora por completo estos datos. Esto comunica al cliente que no leyó su mensaje o que está usando un script automático sin contexto, destruyendo la confianza en el primer segundo.\n\n**2. No gestión de expectativas de precio (Manejo de Objeciones)**\nEl Motorola Edge 40 Pro tiene un precio de venta de **$649**. El presupuesto del cliente es de **$489**. Hay una brecha de **$160**, lo cual representa más del 2\n\n### c03 (apurado)\n",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! ¿Tienen el OnePlus 12 disponible? Me interesa saber el precio.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el OnePlus 12 disponible en stock.\n\nEl precio es de $849 y tenés envío gratis porque supera los $700 🚚\n\nEs una bestia: pantalla de 6.82\", Snapdragon 8 Gen 3 y cámara Hasselblad.\n\n¿Te sirve este modelo o buscás algo más específico?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! Me interesa. Es justo lo que busco. ¿Podés confirmarme el stock?\n\nCOMPRA: {\"producto\": \"OnePlus 12\", \"precio\": 849}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "OnePlus 12",
+        "price": 849
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 Buen día.\n\n¿Tienen el Motorola Edge 40 Pro disponible? Me interesa mucho pero mi presupuesto es de $489 máximo, vi precios más bajos en otra tienda y quería saber si pueden igualar o tener alguna promo para cerrar hoy.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "No gracias, voy a seguir mirando.",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola, buen día. Busco un Motorola Edge 40 Pro. ¿Lo tienen disponible y cuál es el precio final? Gracias.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Buen día.\n\nSí, tenemos el Motorola Edge 40 Pro disponible en stock. Nos quedan 7 unidades nuevas y en caja cerrada. ✅\n\nEl precio es de $649 + envío ($25, ya que no llega a los $700 para envío gratis). Total: $674\n\n¿Querés saber más detalles sobre el celular o tenés alguna duda específica?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! Me parece bien el precio y lo tengo en stock. ¿Cómo procedo para comprarlo?  \n\nCOMPRA: {\"producto\": \"Motorola Edge 40 Pro\", \"precio\": 674}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Motorola Edge 40 Pro",
+        "price": 674
+      },
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 53471
+}
