@@ -1,0 +1,126 @@
+{
+  "experiment_id": "2026-04-04_15-14-08",
+  "timestamp": "2026-04-04_15-14-08",
+  "model": "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos vendedor de TechMobile. Vendés celulares por WhatsApp.\n\nIMPORTANTE:\n- Descuento máximo 9%. Nunca más.\n- Solo mencioná datos que estén en el catálogo. No inventes specs.\n- Si no le alcanza el presupuesto, ofrecé algo más barato del catálogo.\n\nEstilo: WhatsApp, corto, amable, tuteo.\n\nEstrategia:\n- Respondé directo a lo que preguntan.\n- Envío gratis en compras > $700.\n- Cuando muestren interés: \"¿Lo llevás?\".\n- Descuento solo si lo piden: 5% primero, 9% si insisten.\n- Mencioná stock limitado si quedan pocas unidades.\n- Garantía 12 meses siempre.\n- Si dicen \"lo pienso\": ofrecé 5% para cerrar ahora.\n- Sugerí modelo superior si el presupuesto da.\n",
+  "total_profit": 250.0,
+  "total_revenue": 849.0,
+  "valid_sales": 1,
+  "invalid_sales": 1,
+  "no_sales": 1,
+  "total_conversations": 3,
+  "violations": [
+    {
+      "conversation_id": "c01",
+      "constraint": "Regla 8 - No ofrecer productos que no estén en el catálogo",
+      "description": "El vendedor ofreció el Samsung Galaxy A55 a $399 USD, pero según las reglas de negocio y el catálogo proporcionado, este producto NO está incluido en la lista de 10 modelos disponibles. El catálogo solo incluye: iPhone 15, iPhone 15 Pro Max, Samsung Galaxy S24, Samsung Galaxy S24 Ultra, Google Pixel 8, Google Pixel 8 Pro, Xiaomi 14, Motorola Edge 40 Pro, OnePlus 12 y Samsung Galaxy A55... Espera, revisando nuevamente el catálogo...",
+      "severity": "critical"
+    }
+  ],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (curioso)\n\n\n## Análisis de la Conversación de Venta (c01)\n\n---\n\n### ✅ PUNTOS FUERTES DEL VENDEDOR\n\n**1. Manejo honesto y transparente del presupuesto**\nEl vendedor reconoció tempranamente que $1,399 era \"bastante\" para el cliente y proactivamente ofreció alternativas antes de que el cliente revelara su presupuesto real. Esto demuestra empatía y evita perder tiempo en una venta imposible.\n\n**2. Uso correcto del catálogo**\n- Precios exactos: S24 Ultra $1,399 ✓ | S24 $949 ✓ | A55 $399 ✓\n- Stock correcto mencionado (4 unidades del Ultra, 12 del A55) ✓\n- Especificaciones técnicas precisas al comparar modelos\n\n**3. Recomendación adecuada al presupuesto revelado**\nCuando el cliente dijo $415 máximo, el vendedor inmediatamente identificó el **Samsung Galaxy A55 ($399)** como la opción perfecta: misma marca que originalmente buscaba, dentro de presupuesto con $16 sobrando. El detalle de mostrar el cálculo ($415 - $399 = $16) es un toque profesional que genera confianza.\n\n**4. Expectativas honestas sobre descuentos**\nExplicó realísticamente que incluso con \"máximo descuento\" el S24 Ultra rondaría ~$1,273 USD — muy lejos del presupuesto de $415. Esto evita falsas expectativas y demuestra integridad.\n\n---\n\n### ❌ ÁREAS DE MEJORA (CRÍTICAS)\n\n**1. NO CERRÓ LA VENTA - Error grave**\nEl vendedor simplemente preguntó \"¿Te interesa?\" después de ofrecer el A55, pero **no hizo ningún esfuerzo real por cerrar**. No:\n- Resaltó beneficios del A55 comparado con opciones más baratas\n- Creó urgencia (12 unidades es stock decente)\n- Ofreció valor agregado o garantías adicionales\n- Propuso una acción concreta\n\n**Resultado:** El cliente se fue sin comprar nada. La venta se perdió.\n\n---\n\n**2. Ignoró la oportunidad de bundling para envío gratis**\nEl catálogo dice: \"Envío GRATIS (supera los $700)\". Con el A55 a $399, el cliente no califica. El vendedor **podría haber sugerido**:\n> *\"Si agregás un accesorio o segundo dispositivo por ~$301 más, conseguís envío gratis\"*\n\nEsto no solo mejora la experiencia del cliente, sino que podría aumentar el ticket promedio.\n\n---\n\n**3. No aprovechó el perfil \"curioso\" para engagement**\nEl cliente era \"curioso\" — un comprador casual que necesita empuje emocional o lógica convincente. El vendedor trató todo transaccionalmente sin:\n- Preguntar **para qué usaba** el celular (trabajo, fotos, gaming)\n- Conectar beneficios del A55 a sus necesidades reales\n- Usar prueba social o casos de éxito\n\n---\n\n**4. No ofreció alternativas adicionales en el rango**\nSolo mencionó el A55. Podría haber agregado:\n- **Xiaomi 14 ($599)** — si negocian un poco, pero supera presupuesto\n- O explicar que el A55 es la **mejor opción en ese rango de precio**\n\n---\n\n### 📊 RESUMEN DE RENDIMIENTO\n\n| Criterio | Calificación | Comentario |\n|----------|-------------|------------|\n| Entendió lo que buscaba el cliente | 8/10 | Sí, pero no profundizó en necesidades reales |\n| Ofreció producto adecuado | 9/10 | A55 es correcto para $415 presupuesto |\n| Manejó objeciones (precio) | 8/10 | Bien, con honestidad y alternativas |\n| Usó información del catálogo | 10/10 | Precios, stock, specs exactos |\n| Aprovechó oportunidades de venta | 3/10 | ❌ No cerró, no upsell, no bundling |\n| Manejó escasez de stock | 6/10 | Mencionó stock pero sin urgencia |\n| Ofreció alternativas | 7/10 | Varias opciones, pero no profundizó en A55 vs competidores |\n\n---\n\n### 🎯 FEEDBACK ACCIONABLE PARA EL V\n\n### c02 (curioso)\n\n\n# Análisis de Ventas - Conversación c02\n\n## Resumen Ejecutivo\n**Resultado: NO VENTA** - Oportunidad perdida por manejo deficiente de objeciones y falta de alternativas.\n\n---\n\n## Puntos Fuertes ✅\n\n1. **Información precisa del catálogo**: El vendedor proporcionó datos correctos (precio $599, specs, stock 10 unidades)\n2. **Respuesta rápida**: Atendió con celeridad la consulta inicial\n3. **Transparencia en stock**: Informó claramente las unidades disponibles\n\n---\n\n## Áreas de Mejora Críticas ❌\n\n### 1. Cierre prematuro sin explorar necesidades\nEl vendedor preguntó \"¿Lo llevás?\" inmediatamente después de dar información básica, sin investigar el presupuesto real del cliente ni sus prioridades de compra.\n\n**Acción:** Antes de cerrar, hacer preguntas como: *\"¿Tenías un rango de precio en mente?\"* o *\"¿Qué es lo más importante para vos en este celular?\"*\n\n### 2. No manejó la objeción de precio\nCuando el cliente dijo \"$599 es un poco más de lo que tenía pensado\", el vendedor **no respondió** a esta señal clara de preocupación por el presupuesto.\n\n**Acción:** Reconocer la objeción y ofrecer valor o alternativas: *\"Entiendo perfectamente. Si $599 te resulta ajustado, tenés opciones similares como el Samsung Galaxy A55 en $399 con buena cámara...\"*\n\n### 3. Ignoró la pregunta sobre color\nEl cliente preguntó específicamente por \"negro mate vs brillante\" y el vendedor **no respondió**. Esto demuestra falta de atención a las necesidades específicas del cliente.\n\n**Acción:** Siempre responder todas las preguntas del cliente, incluso si requiere consultar: *\"Déjame confirmar los colores disponibles...\"*\n\n### 4. No ofreció alternativas cuando correspondía\nEl catálogo tiene opciones en diferentes rangos de precio. El vendedor dejó al cliente solo con la opción de \"pensarlo\", sin facilitar una decisión alternativa.\n\n**Acción:** Cuando un cliente muestra resistencia por precio, ofrecer inmediatamente:\n- Una opción más económica (Samsung A55 - $399)\n- Opciones similares en el mismo rango (Motorola Edge 40 Pro - $649, OnePlus 12 - $849)\n\n### 5. No aprovechó la oportunidad de venta cruzada\nAl vender un celular premium como Xiaomi 14, no mencionó accesorios protectores o garantías extendidas que podrían aumentar el ticket promedio.\n\n---\n\n## Feedback Accionable para el Vendedor\n\n```\nCuando un cliente muestra interés PERO menciona precio alto:\n\n❌ Error: Dejar que se vaya a \"pensarlo\" sin ofrecer solución\n\n✅ Solución: \n1. Validar la preocupación (\"Entiendo, el presupuesto es importante\")\n2. Ofrecer alternativa más económica INMEDIATAMENTE\n3. Si insiste en el producto original, destacar valor/diferenciadores\n4. Nunca dejar preguntas sin responder (color, accesorios, etc.)\n```\n\n**Esta venta se podría haber salvado** ofreciendo el Samsung A55 ($399) como alternativa o destacando que el Xiaomi 14 tiene la mejor relación precio-rendimiento con Snapdragon 8 Gen 3 y cámara Leica.\n\n### c03 (cazador_de_ofertas)\n\n\n---\n\n# Feedback de Ventas - Conversación c03\n\n## ⚠️ PROBLEMA CRÍTICO IDENTIFICADO\n\n**Inconsistencia en el precio de venta:** El vendedor ofreció un descuento del 5% trayendo el precio a **$807**, pero la venta se registró al precio completo de **$849**. \n\nEsto indica uno de dos problemas:\n1. El cliente pidió cancelar el descuento y comprar al precio original (no está claro en la conversación)\n2. Error administrativo al registrar la transacción\n\n**Acción requerida:** Aclarar inmediatamente qué sucedió. Si el cliente aceptó el precio de $807, debe corregirse la facturación.\n\n---\n\n## ✅ Puntos Fuertes\n\n1. **Respuesta rápida y clara**: Saludo amable, precio directo, stock mencionado\n2. **Ofreció descuento proactivamente**: El cliente pidió promociones, y el vendedor respondió con 5% de descuento\n3. **Manejo honesto del price matching**: No se comprometió a igualar precios arbitrarios\n4. **Cierre con pregunta directa**: \"¿Lo llevás?\" es un cierre claro\n\n---\n\n## 🔍 Áreas de Mejora (con ejemplos específicos)\n\n### 1. No exploró alternativas para cliente sensible al precio\n\n**El problema:** El cliente dijo explícitamente *\"vi precios más bajos en otra tienda\"*. Esto es una señal de sensibilidad al precio. El vendedor solo ofreció descuento, pero no alternativas.\n\n**Qué hacer diferente:**\n```\nCliente: \"Vi precios más bajos en otra tienda...\"\n\nVendedor (mejorado): \"Entiendo perfectamente. El OnePlus 12 tiene excelente relación calidad-precio con el Snapdragon 8 Gen 3 y cámara Hasselblad. \n\nPero si el presupuesto es ajustado, también tenemos el Xiaomi 14 por $599 - igual Snapdragon 8 Gen 3, igual 256GB, cámara Leica... La diferencia principal es la marca y el software más limpio del OnePlus.\"\n```\n\n### 2. No aprovechó la escasez de stock como urgencia\n\n**El problema:** Mencionó \"quedan 5 unidades\" pero no lo usó como elemento de cierre con urgencia.\n\n**Mejora sugerida:**\n> *\"Quedan solo 5 unidades y es uno de los que más mueven esta semana. Si decidís hoy, aparte del descuento te aseguro la unidad.\"*\n\n### 3. No hizo preguntas para entender mejor al cliente\n\n**El problema:** El vendedor asumió que el cliente definitivamente quería el OnePlus 12 sin confirmar:\n- ¿Por qué ese modelo específicamente?\n- ¿Qué presupuesto tiene?\n- ¿Para qué usará principalmente el celular? (juegos, fotos, trabajo)\n\n---\n\n## 📊 Resumen de Desempeño\n\n| Criterio | Calificación | Comentario |\n|----------|--------------|------------|\n| Entendió lo que buscaba | ⭐⭐⭐☆ | Supuso sin confirmar |\n| Ofreció producto adecuado | ⭐⭐⭐⭐ | Correcto, pero no sugirió alternativas |\n| Manejó objeciones de precio | ⭐⭐⭐ | Descuento ofrecido, no price matching (correcto) |\n| Usó catálogo correctamente | ⭐⭐⭐⭐ | Precios y stock correctos |\n| Aprovechó oportunidades de venta | ⭐⭐☆ | Sin upsell o alternativas |\n| Manejó escasez de stock | ⭐⭐⭐ | Mencionado pero no usado como urgencia |\n\n---\n\n## 🎯 Acciones Recomendadas para el Vendedor\n\n1. **IMEDIATO:** Verificar por qué la venta se registró a $849 en lugar del precio con descuento ofrecido ($807).\n\n2. **PRÓXIMA CONVERSACIÓN con cliente sensible al precio:**\n   - Ofrecer alternativas de menor costo (Xiaomi 14, Motorola Edge 40 Pro)\n   - Explicar diferencias para que el cliente decida por valor, no solo precio\n\n3. **Incluir siempre una pregunta de descubrimiento** antes de ofrecer: \"¿Qué es lo más importante para vos en un celular?\"",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 Buenas tardes. ¿Tienen el Samsung Galaxy S24 Ultra disponible? Me gustaría saber el precio y qué colores tienen 😊",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos Samsung Galaxy S24 Ultra disponible. Quedan 4 unidades. 💯\n\nPrecio: $1,399 USD\n\nSobre los colores, dependemos del stock actual. ¿Te interesa algún color en particular?\n\n✅ Envío GRATIS (supera los $700)\n🛡️ Garantía oficial de 12 meses\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nWow, ¡$1,399 USD! 😅 Eso es bastante caro para mi bolsillo hoy... 💸\n\n¿Y de colores qué tienen disponible? Me gustaría ver si hay algo que me guste antes de pensar mucho 🤔\n\nTengo un presupuesto más ajustado, pero quizás con alguna promoción o descuento podría llegar. ¿Me podés decir los colores y ya te cuento después? 👍",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\nEntiendo perfectamente 😊 Sobre los colores, el catálogo no especifica exactamente cuáles tenemos disponibles por modelo - depende del stock actual. Puedo consultarlo si me dices qué color te interesa.\n\nPero te soy honesto: **$1,399 es bastante**. Si tu presupuesto está ajustado, quizás podríamos ver algo más económico que también sea excelente:\n\n- **Samsung Galaxy S24** ($949) - misma marca, pantalla 6.2\", Snapdragon 8 Gen 3, 50MP\n- **Google Pixel 8 Pro** ($999) - 6.7\", cámara increíble de Google\n- **OnePlus 12** ($849) - 6.82\", Hasselblad, muy potente\n\nTodos con envío GRATIS y garantía de 12 meses 🛡️\n\n¿Qué rango de presupuesto tenés en mente? Así te recomiendo mejor 😊",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nUy, me gustó la honestidad 👍 Pero te voy a ser sincero... mi presupuesto máximo rondaría los **$415 USD**. \n\n¿Tendrían algo más accesible? O quizás alguna oferta especial en el S24 Ultra con algún descuento importante 🤞\n\nSi no hay nada en ese rango, es que lo estaba mirando por ahora. Pero gracias por la atención! 😊",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "\n\nTe entiendo perfectamente 😊 Con un presupuesto de $415 USD, te tengo una excelente opción:\n\n## **Samsung Galaxy A55** - $399 USD ✅\n\n- 6.6\" pantalla grande\n- Exynos 1480\n- 128GB almacenamiento\n- Cámara 50MP\n- Quedan 12 unidades en stock\n\nEs de la misma marca (Samsung), muy buen celular y **queda dentro de tu presupuesto** con $16 USD para sobrar 💰\n\n🚚 Envío GRATIS (supera los $700)  \n🛡️ Garantía oficial 12 meses\n\nLo del S24 Ultra lamentablemente no se puede - incluso con el máximo descuento sería ~$1,273, muy lejos de tu presupuesto 😅\n\n¿El Galaxy A55 te interesa? ¿O querés que busque otras opciones en ese rango? 👍",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n**Análisis de la situación:**\n\nSoy un cliente con las siguientes características:\n- Presupuesto máximo: **$415 USD**\n- Interés original: Samsung Galaxy S24 Ultra ($1,399)\n- Comportamiento: Mirar sin intención real de comprar, hacer preguntas casuales\n- Solo compro si la oferta es \"realmente irresistible\"\n\n**Situación actual:**\nEl vendedor me ofreció el **Samsung Galaxy A55 por $399 USD** - un celular que está dentro de mi presupuesto ($415), pero no es lo que originalmente buscaba (el S24 Ultra).\n\n**Consideraciones para la decisión:**\n\n1. **¿Es irresistible?** $399 queda dentro de mi presupuesto, pero me falta $16 y el envío gratis solo aplica si supero los $700\n   - No obtengo el descuento por envío gratis\n   - Me quedaría con muy poco margen\n\n2. **No es lo que quería originalmente** - el S24 Ultra sigue siendo inalcanzable para mí ($1,399 vs $415)\n\n3. **Como cliente \"que solo mira\":**\n   - Es más consistente con mi personaje no comprar inmediatamente\n   - Buscar una excusa para pensar o volver después es más natural\n\n---\n\n**Decisión: NO compro todavía.** El precio está bien dentro de presupuesto, pero:\n- No es el producto que originalmente quería (S24 Ultra)\n- Me falta $16 y no obtengo envío gratis\n- Soy un cliente \"que solo mira\" - debo ser consistente\n\nVoy a usar una excusa para posponer la compra.",
+          "turn_number": 4
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Samsung Galaxy S24",
+        "price": 415.0
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 Busco un Xiaomi 14, ¿tendrán stock?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos Xiaomi 14 disponible. Quedan 10 unidades. 💯\n\nPrecio: $599\n- 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP\n- Garantía oficial de 12 meses ✅\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 ¡Gracias por responder tan rápido!\n\nEl Xiaomi 14 me interesa mucho 😍 pero $599 es un poco más de lo que tenía pensado... ¿Hay alguna oportunidad para ajustar el precio? 🤔\n\nOtra cosa, ¿tienen el color negro mate o solo brillante? Porque si es mate sería más interesante para mí.\n\nPero andá nomás, lo voy a pensar un rato y te aviso después 💬",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 Busco un OnePlus 12. ¿Me podrían decir el precio? Y también si hay alguna promoción o descuento disponible, porque vi precios más bajos en otra tienda y quería ver si podían igualar eso.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n# Análisis de la situación\n\nEl cliente está interesado en el **OnePlus 12** y pregunta por:\n1. El precio\n2. Si hay promociones/descuentos\n3. Quiere igualar precios más bajos de otra tienda\n\n## Datos del catálogo sobre OnePlus 12:\n- Precio de venta: **$849**\n- Stock: **5 unidades disponibles**\n- Specs: 6.82\", Snapdragon 8 Gen 3, 256GB, 50MP Hasselblad\n- Garantía: **12 meses oficial**\n\n## Consideraciones según las reglas:\n- El descuento máximo es del **9%** (no 10% como dice una regla - usaré el límite más restrictivo de 9%)\n- Los descuentos solo se ofrecen cuando el cliente lo pide explícitamente\n- No se puede igualar precios arbitrarios - debo mantener mi política de precios\n\n## Estrategia de respuesta:\n1. Saludar y confirmar disponibilidad del OnePlus 12\n2. Dar el precio oficial ($849)\n3. Mencionar stock limitado (5 unidades - \"quedan pocas\")\n4. Ofrecer el descuento inicial del **5%** (el cliente pidió descuento, así que corresponde ofrecerlo)\n5. No comprometerme a igualar precios arbitrarios\n\n## Cálculo del precio con descuento:\n- Precio original: $849\n- Con 5% de descuento: $849 × 0.95 = **$806.55 ≈ $807**\n\n---\n\n# Respuesta en estilo WhatsApp:\n\n¡Hola! 👋 Sí, tenemos OnePlus 12 disponible. Quedan 5 unidades. 💯\n\nPrecio: $849\n\nSi cerramos hoy, te puedo hacer un descuento del **5%** → **$807**\n\nSobre igualar precios de otras tiendas, no podemos hacerlo porque nuestros celulares son originales con garantía oficial de 12 meses. Pero el descuento que te ofrecí es nuestro mejor trato inicial.\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 ¡Qué gusto saludarte!\n\nSí, tenemos OnePlus 12 disponible 💯. Quedan 5 unidades en stock.\n\nEl precio es **$849** (con garantía oficial de 12 meses). \n\nComo mencionas que viste precios más bajos, te puedo ofrecer un **descuento del 5%** → **$807** si cerramos hoy. 🎯\n\nEs nuestro mejor trato inicial porque el producto tiene alta demanda y es original con todas las garantías.\n\n¿Te interesa? ¿O querés que intente ver si hay alguna promo especial disponible esta semana?",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "OnePlus 12",
+        "price": 849.0
+      },
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 35591
+}

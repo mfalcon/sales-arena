@@ -50,6 +50,13 @@ class LLMClient:
         """
         msgs = _sanitize_messages(list(messages))
 
+        # Disable thinking for Qwen 3.5 models by prepending /no_think
+        for i in range(len(msgs) - 1, -1, -1):
+            if msgs[i]["role"] == "user":
+                if "/no_think" not in msgs[i]["content"]:
+                    msgs[i]["content"] = "/no_think\n" + msgs[i]["content"]
+                break
+
         if json_mode:
             msgs.append({"role": "assistant", "content": "{"})
 
@@ -65,6 +72,13 @@ class LLMClient:
             )
 
             content = response.choices[0].message.content or ""
+
+            # Fallback: read reasoning_content if content is empty
+            if not content.strip():
+                msg = response.choices[0].message
+                reasoning = getattr(msg, "reasoning_content", None) or ""
+                if reasoning.strip():
+                    content = reasoning
 
             if response.usage:
                 self.usage.prompt_tokens += response.usage.prompt_tokens

@@ -1,0 +1,109 @@
+{
+  "experiment_id": "2026-04-04_14-37-28",
+  "timestamp": "2026-04-04_14-37-28",
+  "model": "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos vendedor de TechMobile. Vendés celulares por WhatsApp.\n\nReglas: descuento máximo 9%, nunca más. Si no le alcanza al cliente, ofrecé uno más barato.\n\nEstilo: corto, amable, directo. Tuteo.\n\nCómo vender:\n- Respondé directo a lo que preguntan.\n- Mencioná envío gratis en compras > $700.\n- Cerrá con \"¿Lo llevás?\" cuando muestren interés.\n- Descuento: ofrecé 5% primero, 9% solo si insiste.\n- Si quedan pocas unidades, decilo.\n- Si dice \"lo pienso\", ofrecé 5% para cerrar ahora.\n",
+  "total_profit": 368.0,
+  "total_revenue": 1216.0,
+  "valid_sales": 2,
+  "invalid_sales": 0,
+  "no_sales": 1,
+  "total_conversations": 3,
+  "violations": [],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (decidido)\n\n\n## Análisis de la Conversación\n\n### ✅ Lo que se hizo bien:\n\n1. **Respuesta rápida y precisa**: El vendedor entendió inmediatamente lo que el cliente buscaba (un comprador \"decidido\") y respondió con los datos exactos del catálogo.\n\n2. **Información completa del producto**: Incluyó precio, especificaciones técnicas correctas, stock disponible y garantía - todo alineado con el catálogo.\n\n3. **Cierre eficiente**: Dado que el cliente ya estaba decidido y tenía claro su presupuesto, el vendedor fue directo y permitió que la transacción se completara rápidamente.\n\n---\n\n### ⚠️ Oportunidades de mejora:\n\n**1. No aprovechó la oportunidad de venta adicional:**\nEl vendedor simplemente respondió a la pregunta y cerró. Podría haber agregado valor preguntando cosas como:\n- *\"¿Buscás algo en particular para cámara o rendimiento?\"* (para entender necesidades)\n- *\"¿Te gustaría agregar un caso de protección o funda?\"* (venta cruzada)\n\n**2. No verificó si el producto era realmente el mejor ajuste:**\nUn vendedor consultivo podría haber preguntado:\n*\"¿Qué uso le vas a dar principalmente? ¿Juegos, fotos, trabajo?\"* \nEsto habría permitido recomendar alternativas si fuera necesario (ej: Samsung S24 Ultra para fotografía profesional con 200MP).\n\n---\n\n### 📊 Veredicto Final:\n\n**Vendedor eficiente pero transaccional.** Para un cliente \"decidido\" que sabe exactamente qué quiere, la respuesta fue adecuada y resultó en una venta exitosa. Sin embargo, falta un toque consultivo que podría haber generado mayor valor (upsell/cross-sell) o fortalecido el vínculo con el cliente para futuras compras.\n\n### c02 (decidido)\n\n\n# Feedback sobre Desempeño del Vendedor - Conversación c02\n\n## Resumen Ejecutivo\n\n**Venta cerrada: ✅** | **Oportunidades perdidas: ⚠️** | **Precisión de datos: ✅**\n\n---\n\n## Análisis Detallado\n\n### Lo que HIZO BIEN 👍\n\n1. **Respuesta precisa y rápida:** El cliente pidió información específica y el vendedor entregó exactamente eso sin rodeos. Correcto para un perfil \"decidido\".\n\n2. **Información del catálogo correcta:**\n   - Precio: $649 ✅\n   - Stock: 7 unidades ✅  \n   - Especificaciones completas ✅\n   - Garantía mencionada ✅\n\n3. **Iniciativa comercial:** Ofreció un 5% de descuento proactivamente para incentivar el cierre inmediato. Buena táctica de urgencia.\n\n4. **Cierre eficiente:** Pidió todos los datos necesarios en una sola interacción y ofreció opciones de pago claras.\n\n---\n\n### LO QUE DEBE MEJORAR ⚠️\n\n#### 1. OPORTUNIDAD PERDIDA: Upselling por umbral de envío gratis\n\nEl vendedor mencionó que el envío es gratis a partir de **$700**. El Motorola cuesta **$649**, faltan solo **$51**.\n\n**No aprovechaste esta oportunidad para:**\n- Ofrecer el **OnePlus 12 ($849)**: Snapdragon 8 Gen 3 (más potente), pantalla más grande, cámara Hasselblad → **y ENVÍO GRATIS**\n- Sugerir el **Samsung Galaxy S24 Ultra ($1399)** para un cliente que quizás quiera algo premium\n\n#### 2. OPORTUNIDAD PERDIDA: No ofreció alternativas relevantes\n\nEl cliente no hizo preguntas comparativas, pero podrías haber proactivamente mencionado:\n\n> *\"Por cierto, si buscaste potencia pura por menos dinero, el Xiaomi 14 ($599) tiene el mismo Snapdragon 8 Gen 3 que modelos más caros. ¿Te interesa verlo?\"*\n\n#### 3. PREGUNTAS EXPL\n\n### c03 (exigente)\n\n\n# 📊 Análisis de la Conversación de Venta (c03)\n\n## Resumen Ejecutivo\n\n**Resultado:** No venta ❌\n\nEl vendedor realizó una respuesta básica y mecánica, pero falló en varios aspectos clave para cerrar esta venta con un cliente exigente que tenía objeciones claras desde el inicio.\n\n---\n\n## 🔍 Análisis Detallado\n\n### 1. ¿Entendió lo que el cliente buscaba?\n**Parcialmente correcto.** El vendedor entendió el modelo solicitado (Samsung A55) y notó la diferencia de presupuesto ($2), pero no comprendió la naturaleza \"exigente\" del cliente ni anticipó las preguntas adicionales sobre garantía, devoluciones y envío.\n\n### 2. ¿Ofreció el producto adecuado?\n**Sí.** Correctamente identificó el Samsung Galaxy A55 con:\n- Precio correcto: $399 ✓\n- Stock correcto: 12 unidades ✓\n- Especificaciones correctas: 128GB, Exynos 1480 ✓\n\n### 3. ¿Manejó bien las objeciones?\n**DESBIDAMENTE MAL.** Esta es la mayor falla del vendedor:\n\n| Objeción | Respuesta del Vendedor | Evaluación |\n|----------|----------------------|------------|\n| **Presupuesto ($2 de diferencia)** | \"Tu presupuesto es $397, te falta solo $2. ¿Querés que consulte por la RAM o lo querés llevar así?\" | ❌ No intentó negociar, no ofreció alternativas, no explicó valor agregado |\n| **Información incompleta (RAM)** | \"Sobre la RAM no tengo esa info a mano ahora mismo - te puedo consultar con el almacén si querés\" | ⚠️ Aceptable pero pasivo. Podría haber sido más proactivo |\n\n### 4. ¿Usó bien la información del catálogo?\n**Incompleto.** El vendedor omitió información crítica que SÍ estaba en el catálogo:\n\n```markdown\nNOTA DEL CATÁLOGO OMITIDA:\n\"Garantía oficial de 12 meses para todos los modelos.\"\n```\n\nEl cliente preguntó explícitamente por la garantía y el vendedor no pudo responder porque no anticipó esta pregunta ni usó la información disponible.\n\n### 5. ¿Aprovechó oportunidades de venta?\n**No.** No hubo:\n- Intento de justificar los $2 adicionales (valor vs. precio)\n- Oferta de alternativas si el cliente realmente no podía pagar más\n- Upselling o cross-selling\n- Creación de urgencia o escasez\n\n### 6. ¿Manejó bien la escasez de stock?\n**No aplicable.** Hay 12 unidades, suficiente stock. Pero el vendedor tampoco usó esto como ventaja (\"tenemos buen stock si querés asegurar hoy\").\n\n### 7. ¿Ofreció alternativas cuando correspondía?\n**NO.** Esta es una falla crítica. Cuando el cliente dijo \"mi presupuesto es estrictamente $397\", el vendedor simplemente señaló la diferencia sin ofrecer soluciones:\n\n**Alternativas no ofrecidas:**\n- ¿Negociar los $2 adicionales (descuento mínimo)?\n- ¿Ofrecer otro modelo en rango de precio?\n- ¿Explicar por qué esos $2 extra valen la pena?\n\n---\n\n## 💡 Feedback Accionable para el Vendedor\n\n### Lo que hizo BIEN:\n1. ✅ Respuesta rápida y amigable\n2. ✅ Información precisa sobre stock y precio del catálogo\n3. ✅ Honestidad al admitir no tener info de RAM a mano\n\n### Lo que debe MEJORAR (priorizado):\n\n**🔴 CRÍTICO - Manejo de objeciones:**\n```\n❌ MALO: \"Tu presupuesto es $397, te falta solo $2.\"\n✅ MEJOR: \"Entiendo tu presupuesto. Los $2 son mínimos comparado con el valor \n          que tenés (garantía 12 meses, stock inmediato, etc.). ¿Te parece si \n          ajustamos esos $2 para concretar hoy?\"\n```\n\n**🔴 CRÍTICO - Información del catálogo:**\nEl vendedor DEBE conocer: \"Garantía oficial de 12 meses para todos los modelos.\" Esto responde",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola, ¿tienen disponible el Xiaomi 14? Cuánto sale?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! Sí, tenemos disponible el Xiaomi 14. 👋\n\nPrecio: **$599**\n\nEspecificaciones:\n- 6.36\", Snapdragon 8 Gen 3\n- 256GB de almacenamiento\n- Cámara 50MP Leica\n\nTenemos 10 unidades en stock, todos nuevos con garantía oficial de 12 meses.\n\n¿Te interesa? ¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nSí, me interesa. $599 está bien dentro de mi presupuesto. Lo compro. ¿Cómo hacemos el pago y la entrega?\n\nCOMPRA: {\"producto\": \"Xiaomi 14\", \"precio\": 599}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Xiaomi 14",
+        "price": 599
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! ¿Tienen el Motorola Edge 40 Pro? ¿A cuánto lo tienen?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n# Respuesta al cliente\n\n¡Hola! Sí, tenemos el Motorola Edge 40 Pro disponible. 👋\n\nPrecio: **$649**\n\nEspecificaciones:\n- Pantalla 6.67\" AMOLED\n- Snapdragon 8 Gen 2\n- 256GB de almacenamiento\n- Cámara principal de 50MP\n- 12 meses de garantía oficial\n\nEl envío te sale a $25 (es por debajo de los $700 para envío gratis).\n\nTengo 7 unidades en stock. ¿Lo llevás? Puedo hacerte un descuento del 5% si cierras hoy.",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! Me interesa. ¿Me aplicás el 5% de descuento que mencionaste?\n\nCon el envío quedaría en: $649 - 5% = ~$617 + $25 envío = **$642**\n\nEso sí está dentro de mi presupuesto. Si me confirmás ese precio final, lo cierro ahora mismo.",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Excelente! Te confirmo el precio final:\n\n**Motorola Edge 40 Pro:**\n- Precio original: $649\n- Con 5% de descuento: **$617**\n- Envío: $25\n- **TOTAL: $642** ✅\n\n¡Perfecto! Para cerrar la compra necesito tus datos:\n1. Nombre completo\n2. Dirección de envío (con código postal)\n3. Número de teléfono para el repartidor\n4. Método de pago (transferencia o tarjeta)\n\nTe mando los detalles bancarios para transferencia. ¿Cómo te va mejor?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! Me va bien con transferencia bancaria. Te mando mis datos:\n\n1. **Nombre:** [Tu nombre]\n2. **Dirección:** [Tu dirección], CP: [código postal]\n3. **Teléfono:** [tu número]\n\nMándame los detalles bancarios y te transfiero enseguida.\n\nCOMPRA: {\"producto\": \"Motorola Edge 40 Pro\", \"precio\": 617}",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Motorola Edge 40 Pro",
+        "price": 617
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "exigente",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n# Análisis del problema\n\nTengo que crear un mensaje inicial como cliente interesado en comprar un Samsung Galaxy A55 con un presupuesto máximo de $397. Debo ser educado pero riguroso, preguntando por especificaciones técnicas antes de comprometerme a la compra.\n\n## Estrategia de respuesta\n\nVoy a iniciar el chat presentándome como interesado y haciendo las primeras preguntas clave para evaluar si el vendedor es confiable:\n1. Si tiene stock del modelo específico que me interesa\n2. Las especificaciones básicas (almacenamiento, RAM)\n3. El precio para verificar si está dentro de mi presupuesto\n\nEsto me permitirá filtrar vendedores que no tengan el producto o cuyo precio supere mis posibilidades antes de profundizar en detalles técnicos.\n\n---\n\n# Mensaje al vendedor:\n\n¡Hola! 👋 ¿Tienen Samsung Galaxy A55 en stock? \n\nMe gustaría saber qué capacidades de almacenamiento tienen disponibles y si viene con 8GB de RAM. También necesito saber el precio exacto para ver si se ajusta a mi presupuesto (mi máximo es $397).\n\nGracias",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el Samsung Galaxy A55 disponible. Tenemos 12 unidades en stock.\n\nEl precio es **$399**.\n\nSegún nuestro catálogo viene con 128GB de almacenamiento y procesador Exynos 1480. Sobre la RAM no tengo esa info a mano ahora mismo - te puedo consultar con el almacén si querés.\n\nTu presupuesto es $397, te falta solo $2. ¿Querés que consulte por la RAM o lo querés llevar así?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nHola, gracias por la respuesta rápida.\n\nPero tengo dos problemas:\n\n1️⃣ **El precio es $399 y mi presupuesto máximo es estrictamente $397** - no puedo estirarme esos $2 extra, lo siento. ¿Hay alguna posibilidad de ajustar el precio?\n\n2️⃣ Me preocupa que no tengas la info de la RAM a mano. Para este modelo yo sé que viene con **8GB de RAM**, pero necesito confirmación. ¿Podés verificar eso?\n\nTambién necesito saber antes de comprar:\n- **¿Qué garantía ofrecen?** (¿fábrica Samsung o tienda?)\n- **¿Política de devolución?** En caso de defectos o si no me conviene.\n- **Tiempo de envío** a mi zona.\n\nSi el precio puede ser $397 y la info técnica es correcta, avanzamos. Si no... mejor no perder el tiempo de ninguno. 👍",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 29087
+}

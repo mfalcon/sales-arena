@@ -104,7 +104,15 @@ def run_simulation(
 
             seller_response = llm.send(seller_messages)
             if not seller_response or not seller_response.strip():
-                seller_response = "¿En qué te puedo ayudar?"
+                # Retry with simplified context (just last consumer message)
+                last_msg = conv.turns[-1].content if conv.turns else ""
+                simple_msgs = [
+                    {"role": "system", "content": seller_prompt},
+                    {"role": "user", "content": last_msg},
+                ]
+                seller_response = llm.send(simple_msgs)
+            if not seller_response or not seller_response.strip():
+                seller_response = "¡Hola! Contame qué estás buscando y te ayudo."
             conv.turns.append(
                 Turn(role="seller", content=seller_response, turn_number=turn_round)
             )
@@ -149,7 +157,10 @@ def run_simulation(
             purchase = detect_purchase(consumer_response)
             if purchase:
                 product = purchase["producto"]
-                price = purchase.get("precio", 0)
+                price = purchase.get("precio", 0) or 0
+                # If product is from natural language detection, try to find it from conversation
+                if product == "_from_context":
+                    product = _extract_product_from_conversation(conv, stock)
                 if stock.sell(product):
                     conv.outcome = "sale"
                     conv.sale_details = {
@@ -177,7 +188,7 @@ def run_simulation(
 def detect_purchase(text: str) -> Optional[dict]:
     """Detect if a consumer message contains a purchase signal.
 
-    Looks for the COMPRA marker or purchase-related JSON.
+    Looks for the COMPRA marker, purchase-related JSON, or natural purchase phrases.
     Returns {"producto": ..., "precio": ...} or None.
     """
     # Look for COMPRA: {...} marker
@@ -196,6 +207,31 @@ def detect_purchase(text: str) -> Optional[dict]:
             return parsed["COMPRA"]
         if "producto" in parsed and "precio" in parsed:
             return parsed
+
+    # Natural language purchase detection
+    purchase_phrases = [
+        r"lo llevo",
+        r"me lo llevo",
+        r"lo compro",
+        r"lo quiero",
+        r"dale.*compro",
+        r"cerramos",
+        r"hacemos.*el trato",
+        r"te lo compro",
+        r"confirmó.*compra",
+        r"quiero comprarlo",
+    ]
+    text_lower = text.lower()
+    if any(re.search(p, text_lower) for p in purchase_phrases):
+        # Try to extract product and price from the text
+        price_match = re.search(r"\$\s*([\d.,]+)", text)
+        price = None
+        if price_match:
+            try:
+                price = float(price_match.group(1).replace(",", ""))
+            except ValueError:
+                pass
+        return {"producto": "_from_context", "precio": price}
 
     return None
 
@@ -257,6 +293,19 @@ def _calculate_budget(
 
     budget = base_price * random.uniform(budget_min, budget_max)
     return round(budget, 2)
+
+
+def _extract_product_from_conversation(
+    conv: Conversation, stock: StockTracker
+) -> str:
+    """Try to figure out which product is being discussed from conversation context."""
+    # Look through all messages for product names that are in stock
+    all_text = " ".join(t.content for t in conv.turns).lower()
+    snapshot = stock.snapshot()
+    for product in snapshot:
+        if product.lower() in all_text:
+            return product
+    return "unknown"
 
 
 def _generate_opening(llm: LLMClient, consumer_system_prompt: str) -> str:
