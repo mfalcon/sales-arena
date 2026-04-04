@@ -59,6 +59,7 @@ def evaluate_experiment(
             if judge_result["valid_sale"]:
                 valid_sales += 1
                 price = conv.sale_details.get("price", 0) if conv.sale_details else 0
+                price = float(price) if price else 0.0
                 product = conv.sale_details.get("product", "") if conv.sale_details else ""
                 cost = _find_cost(product, cost_map)
                 profit = price - cost

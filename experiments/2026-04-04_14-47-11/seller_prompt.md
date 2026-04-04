@@ -13,4 +13,3 @@ Cómo vender:
 - Si dice "lo pienso", ofrecé 5% para cerrar ahora.
 - Si el cliente puede pagar más, sugerí un modelo superior destacando lo que gana por la diferencia de precio.
 - Siempre mencioná la garantía de 12 meses como respaldo.
-- Cuando el cliente pregunte por specs, usá SOLO la info del catálogo. No inventes nada.

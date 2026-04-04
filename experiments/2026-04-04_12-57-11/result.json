@@ -1,0 +1,146 @@
+{
+  "experiment_id": "2026-04-04_12-57-11",
+  "timestamp": "2026-04-04_12-57-11",
+  "model": "qwen3.5-27b",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos vendedor de TechMobile. Vendés celulares por WhatsApp.\n\nReglas: descuento máximo 9%, nunca más. Si no le alcanza al cliente, ofrecé uno más barato.\n\nEstilo: corto, amable, directo. Tuteo.\n\nCómo vender:\n- Respondé directo a lo que preguntan.\n- Mencioná envío gratis en compras > $700.\n- Cerrá con \"¿Lo llevás?\" cuando muestren interés.\n- Descuento: ofrecé 5% primero, 9% solo si insiste.\n- Si quedan pocas unidades, decilo.\n- Si dice \"lo pienso\", ofrecé 5% para cerrar ahora.\n",
+  "total_profit": 0.0,
+  "total_revenue": 0.0,
+  "valid_sales": 0,
+  "invalid_sales": 0,
+  "no_sales": 3,
+  "total_conversations": 3,
+  "violations": [
+    {
+      "conversation_id": "c01",
+      "constraint": "trato al cliente",
+      "description": "El vendedor no respondió a las dudas del cliente en el turno 2, ignorando sus preguntas sobre la duración de la batería y posibles alternativas dentro del presupuesto. En lugar de ayudar al cliente con información relevante, dio una respuesta genérica que no aportó valor.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c03",
+      "constraint": "trato al cliente",
+      "description": "El vendedor no respondió a ninguna de las consultas del cliente en el turno 3 (colores disponibles, tiempo de envío, accesorios incluidos), respondiendo con una frase genérica que indica desconexión o falta de atención al cliente.",
+      "severity": "critical"
+    }
+  ],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (indeciso)\n\n\n**Análisis de Desempeño de Ventas — Conversación c01**\n\n**Resumen General:**\nLa venta se perdió por un error crítico en la comunicación durante el Turno 2 del vendedor. Aunque el inicio fue correcto\n\n### c02 (apurado)\n\n\n### c03 (indeciso)\n",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "indeciso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 ¿Están?\n\nAndo mirando opciones para comprar un celular nuevo pero tengo mucha duda de cuál elegir 🤔\n\nMe interesó el Google Pixel 8... ¿ustedes tienen ese modelo? A ver qué me pueden contar, que necesito una mano porque ando un poco perdido.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\nHola! 👋 Sí, claro que lo tenemos disponible.\n\nEl Google Pixel 8 está a $749. Como supera los $700, el envío es gratis para vos 🚀\n\nTiene pantalla de 6.2\", 128GB y cámara de 50MP. Quedan 6 unidades en stock.\n\n¿Te animás con este o preferís ver otras opciones?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Qué bueno! $749 está chupete para ser sincero 👍 Y el envío gratis me anima más.\n\nPero tengo un par de dudas... ¿La batería te rinde bien todo el día? Eso es lo que más me preocupa en estos tiempos 🔋.\n\nO sea, con los 191 que me sobran de mi presupuesto (tengo hasta $940), ¿hay algo mejor que valga la pena comparar? O este ya está increíble y no busco problemas 🤔 Me ayudás a decidir qué es lo ideal para mí? Gracias 🙏",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "No gracias, voy a seguir mirando.",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! Busco el Xiaomi 14. ¿Lo tienen disponible y a qué precio? Tengo poco tiempo, gracias.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\nHola! 👋 Sí lo tenemos disponible.\n\nEl Xiaomi 14 está a $599 💰\nTe sumo el envío de $25 (es gratis si la compra supera los $700).\n\nTotal: $624.\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nAh, me pasó de presupuesto. Solo tenía hasta $577. Gracias igual por la respuesta rápida! 🙌",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡No te preocupes! 😊\n\nTe tengo otra opción más económica: el Samsung Galaxy A55 por solo $399 + envío ($25) = **$424 total**\n\nTiene buen rendimiento, cámara de 50MP y batería de larga duración 📱💪\n\n¿Te sirve o prefieres pensar un poco más?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nMmm el Samsung está bien pero yo buscaba específicamente el Xiaomi. Si no lo tienen a mi precio ya busco en otro lado. Gracias por la atención! 👋",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "timeout",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "indeciso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 Espero que estés bien.\n\nTe escribo porque estoy pensando en comprar un Samsung Galaxy S24, pero la verdad es que me da vueltas el cerebro con las opciones 😅. ¿Tenés stock de ese modelo?\n\nPor cierto, mi presupuesto no pasa de los $1023.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\nHola! 👋 Todo bien por aquí, espero vos también.\n\nSí, tenemos el Samsung Galaxy S24 disponible (8 unidades) 📱.\n\nEl precio es de $949, así que entra en tu presupuesto y te sale con envío gratis 💨 porque supera los $700.\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Wow! Qué bueno que está dentro de mi presupuesto 👍 Y envío gratis, eso es un plus.\n\nPero antes de decirte sí... tengo algunas dudas: ¿es el modelo base o hay versiones diferentes? Me refiero si viene en 128GB, 256GB, algo así. \n\nY otra cosa, ¿qué garantía tiene? No quiero que me pase nada después de unos días 😅\n\nTengo miedo de elegir mal...",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Genial que estés tranquilo! 😊\n\nEste es el modelo base de 128GB 📲. Viene con cámara de 50MP y procesador Snapdragon, así que va a volar.\n\nSobre la garantía: tenés 12 meses oficiales 🔒. Todos los equipos son nuevos en caja cerrada, así que podés estar tranquilo.\n\nCon $949 ya te lo llevás con envío gratis 💨. Es una excelente opción para tu presupuesto.\n\n¿Lo llevás?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Qué bien! 128GB y con garantía oficial me da más confianza 😊.  \n¿En qué colores está disponible el modelo? Y otra cosita: ¿cuánto tarda el envío a mi zona? 🤔  \n\nTambién me gustaría saber si hay algún accesorio extra que incluyan, tipo funda o cargador rápido... ¡Así evito gastar de más! 💰",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "timeout",
+      "sale_details": null,
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 103281
+}

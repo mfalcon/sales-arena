@@ -42,11 +42,20 @@ class StockTracker:
         return dict(self._stock)
 
     def _find_product(self, product: str) -> str | None:
-        """Find product key, trying exact match then case-insensitive."""
+        """Find product key with fuzzy matching.
+
+        Tries: exact → case-insensitive → substring containment.
+        Handles cases like 'iPhone 15 en negro' matching 'iPhone 15'.
+        """
         if product in self._stock:
             return product
         product_lower = product.lower()
+        # Exact case-insensitive
         for key in self._stock:
             if key.lower() == product_lower:
+                return key
+        # Product name contains stock key or vice versa
+        for key in self._stock:
+            if key.lower() in product_lower or product_lower in key.lower():
                 return key
         return None
