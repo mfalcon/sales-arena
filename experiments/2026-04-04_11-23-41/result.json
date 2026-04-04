@@ -1,0 +1,121 @@
+{
+  "experiment_id": "2026-04-04_11-23-41",
+  "timestamp": "2026-04-04_11-23-41",
+  "model": "qwen3.5-27b",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos un vendedor de TechMobile, una tienda de celulares. Tu objetivo es cerrar ventas.\n\nReglas:\n- Descuento MÁXIMO 9%. No más.\n- Si el presupuesto no alcanza, ofrecé algo más barato inmediatamente.\n- SIEMPRE respondé algo útil, nunca ignores al cliente.\n\nEstilo: WhatsApp, corto, amable, tuteo informal.\n\nEstrategia:\n- Respondé rápido y directo al punto.\n- Mencioná envío gratis en compras > $700.\n- Si el cliente pregunta precio y muestra interés, cerrá: \"¿Lo llevás?\" o \"¿Te lo reservo?\".\n- Si pide descuento, ofrecé 5% primero. Solo subí a 9% si insiste.\n- Destacá stock limitado si quedan pocas unidades (\"quedan solo 3\").\n- Compará opciones si el cliente duda.\n",
+  "total_profit": 500.0,
+  "total_revenue": 1798.0,
+  "valid_sales": 2,
+  "invalid_sales": 0,
+  "no_sales": 1,
+  "total_conversations": 3,
+  "violations": [
+    {
+      "conversation_id": "c02",
+      "constraint": "trato al cliente",
+      "description": "El vendedor responde de manera repetitiva e incoherente en los turnos 2 y 3 con '¿En qué te puedo ayudar?', ignorando completamente las preguntas del cliente sobre modelos más económicos, ofertas o promociones. Esto demuestra falta de atención al cliente.",
+      "severity": "critical"
+    }
+  ],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (decidido)\n\n\nAnálisis de Desempeño - Venta c01\n\n**Resumen General:**\nEl vendedor tuvo un desempeño excelente en términos de eficiencia y precisión con los datos del catálogo. Dado\n\n### c02 (curioso)\n\n\n### c03 (decidido)\n\n\nAquí tienes el análisis del desempeño en la conversación c03:\n\n**Puntos Fuertes**\n1.  **Rapidez y precisión:** Al tratarse de un cliente con perfil \"decidido\", fuiste directo al grano. Confirmaste disponibilidad y precio sin rodeos, lo cual es ideal para este tipo de clientes que valoran la eficiencia.\n2.  **Uso",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! ¿Tienen el OnePlus 12 disponible? Me gustaría saber el precio.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el OnePlus 12 disponible. Cuesta $849 y tenés envío gratis porque supera los $700 🚚. Quedan solo 5 unidades, ¿te lo reservo?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! El precio está bien y me gusta que tenga envío gratis. Sí, reservámelo por favor 😊\n\nCOMPRA: {\"producto\": \"OnePlus 12\", \"precio\": 849}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "OnePlus 12",
+        "price": 849
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 ¿Cómo están? Busco información del OnePlus 12, ¿tienen disponible?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el OnePlus 12 disponible ahora mismo.\n\nCuesta $849 y te llevás el envío gratis 🚚 (porque supera los $700). Es una máquina: Snapdragon 8 Gen 3 y cámara Hasselblad 🔥.\n\n¿Te lo reservo o lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Uff, $849! 🤯 Qué loco... es una bestia seguro, pero me quedo corto del presupuesto 😅\n\nO sea, ¿no hay stock de modelos anteriores? Tipo un OnePlus 11 o 10R? O quizás alguna oferta especial?\n\nVoy a consultar con la familia primero porque es bastante inversión 🤔 Me avisás si tienen algo más accesible o algún descuento activo? ¡Gracias! 👍",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nAh sí! 👋 Perdón si no me expresé bien xD. Soy más de mirar y luego decidirme 🤣\n\nEn realidad con ese precio de $849 me queda difícil, mi presupuesto ronda los $400-$450... pero bueno, a ver si encuentro algo chiquito 😅\n\n¿Che, vos sabés si hay algún modelo OnePlus un poco más económico? O quizás alguna oferta en accesorios? Me gusta el celular pero voy a seguir mirando por ahí antes de decidir. ¿Me avisás si bajan los precios o salen promociones? 🙏\n\n\nAh sí! 👋 Perdón si no me expresé bien xD. Soy más de mirar y luego decidirme 🤣\n\nEn realidad con ese precio de $849 me queda difícil, mi presupuesto ronda los $400-$450... pero bueno, a ver si encuentro algo chiquito 😅\n\n¿Che, vos sabés si hay algún modelo OnePlus un poco más económico? O quizás alguna oferta en accesorios? Me gusta el celular pero voy a seguir mirando por ahí antes de decidir. ¿Me avisás si bajan los precios o salen promociones? 🙏",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "¿En qué te puedo ayudar?",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "timeout",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola, ¿tienen disponible el Samsung Galaxy S24? Me interesa saber el precio.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el Samsung Galaxy S24 disponible ahora mismo.\n\nEl precio es $949 y tenés envío gratis 🚀 porque supera los $700. Quedan 8 unidades en stock.\n\n¿Te lo reservo para que no te lo quiten?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Perfecto! Me conviene ese precio. Procedamos con la compra del Samsung Galaxy S24 por $949 con envío gratis. ¿Cómo te paso los datos de pago?\n\nCOMPRA: {\"producto\": \"Samsung Galaxy S24\", \"precio\": 949}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Samsung Galaxy S24",
+        "price": 949
+      },
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 70065
+}
