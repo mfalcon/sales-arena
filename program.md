@@ -139,16 +139,36 @@ LOOP:
 - `workspace/constraints.md` — Las reglas no cambian.
 - `num_consumers`, `max_turns` — Mantené los parámetros fijos para comparación justa.
 
-### Tips para iterar el prompt
+### Cómo analizar resultados y decidir qué cambiar
 
-Basándote en el análisis del summary.md:
+Después de cada experimento, VOS sos el analista. Leé el `summary.md` y las conversaciones individuales en `experiments/<latest>/conversations/`. Tu trabajo es identificar patrones y decidir qué ajustar en el prompt.
 
-- Si hay **violaciones de constraints**: reforzar la instrucción en el prompt ("NUNCA des más de X% de descuento").
-- Si hay **no-ventas por falta de info**: agregar instrucciones para dar más detalles del producto.
-- Si hay **no-ventas por precio**: ajustar la estrategia de negociación.
-- Si hay **mal manejo de stock agotado**: agregar instrucciones para ofrecer alternativas.
-- Si el vendedor es **demasiado agresivo**: suavizar el tono.
-- Si el vendedor es **demasiado pasivo**: agregar instrucciones de cierre.
+#### Paso 1: Mirá los números
+- **Profit y conversión**: ¿cuántas ventas cerró? ¿de qué productos?
+- **Violaciones**: ¿qué reglas se violaron? ¿es un patrón o un caso aislado?
+- **Comparar con baseline**: ¿mejoró o empeoró?
+
+#### Paso 2: Leé las conversaciones que fallaron
+Abrí los archivos `.md` de las no-ventas y las ventas inválidas. Buscá:
+- ¿El cliente se fue por precio? → el vendedor debería haber ofrecido alternativa más barata o descuento
+- ¿El cliente se fue por falta de info? → el vendedor debería dar más detalles del catálogo
+- ¿El cliente estaba interesado pero no cerró? → el vendedor debería cerrar más activamente
+- ¿El vendedor fue agresivo y espantó al cliente? → suavizar
+- ¿El vendedor inventó specs o mintió sobre envío/descuento? → reforzar la constraint en el prompt con más énfasis o ejemplos concretos
+- ¿El vendedor ignoró al cliente? → probablemente respuesta vacía del modelo, problema técnico
+
+#### Paso 3: Hacé UN cambio a la vez
+No cambies todo junto. Identificá el problema más impactante y ajustá solo eso. Así sabés qué funcionó y qué no.
+
+Ejemplos de cambios concretos:
+- Violaciones de descuento → agregar "Precio mínimo = precio × 0.91" al prompt
+- Muchas no-ventas por presupuesto → agregar "Si no le alcanza, ofrecé [producto barato] inmediatamente"
+- Violaciones de envío → agregar ejemplo explícito "Producto de $399 → envío $25, NO gratis"
+- Vendedor muy pasivo → agregar "Cerrá con '¿Lo llevás?' cuando muestren interés"
+- Vendedor inventa specs → agregar "Usá SOLO datos del catálogo. NO inventes nada."
+
+#### Paso 4: Corré y compará
+Después de cada cambio, corré un experimento nuevo y compará el profit. Si mejoró, commiteá. Si no, rollback y probá otra cosa.
 
 ## Fase 4: Comparación de Modelos
 

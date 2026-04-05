@@ -29,7 +29,7 @@ python run.py evaluate experiments/<timestamp>
 - **`stock.py`** — StockTracker. Tracks product quantities, decrements on sale.
 - **`prompts.py`** — All prompt templates. 6 consumer profiles, seller context builder, judge prompt, analyst prompt.
 - **`simulation.py`** — Round-robin engine. Pseudo-parallel conversations (interleaved turns). Seller sees all conversation statuses + live stock.
-- **`evaluation.py`** — Post-simulation evaluation. LLM judge checks constraint violations + bad treatment. LLM analyst gives qualitative feedback.
+- **`evaluation.py`** — Post-simulation evaluation. LLM judge checks constraint violations + bad treatment. Analysis is done by the orchestrator agent (not an LLM call).
 
 ### User workspace (`workspace/`)
 - **`catalog.md`** — Product catalog (free format).
