@@ -50,13 +50,6 @@ class LLMClient:
         """
         msgs = _sanitize_messages(list(messages))
 
-        # Disable thinking for Qwen 3.5 models by prepending /no_think
-        for i in range(len(msgs) - 1, -1, -1):
-            if msgs[i]["role"] == "user":
-                if "/no_think" not in msgs[i]["content"]:
-                    msgs[i]["content"] = "/no_think\n" + msgs[i]["content"]
-                break
-
         if json_mode:
             msgs.append({"role": "assistant", "content": "{"})
 
@@ -87,10 +80,26 @@ class LLMClient:
             if content.strip():
                 break
 
+        # Strip reasoning/analysis tags from output
+        content = _strip_reasoning_tags(content)
+
         if json_mode:
             content = "{" + content
 
         return content
+
+
+def _strip_reasoning_tags(text: str) -> str:
+    """Remove reasoning/analysis tags that reasoning models leak into output."""
+    # Remove <analysis>...</analysis> blocks
+    text = re.sub(r"<analysis>.*?</analysis>", "", text, flags=re.DOTALL)
+    # Remove <thinking>...</thinking> blocks
+    text = re.sub(r"<thinking>.*?</thinking>", "", text, flags=re.DOTALL)
+    # Remove unclosed <analysis> tags (model didn't close them)
+    text = re.sub(r"<analysis>.*", "", text, flags=re.DOTALL)
+    # Remove leading --- or # headers that models add
+    text = re.sub(r"^[\s\-#]*(?:Respuesta|Response|Análisis).*?\n", "", text, flags=re.IGNORECASE)
+    return text.strip()
 
 
 def _sanitize_messages(messages: list[dict]) -> list[dict]:

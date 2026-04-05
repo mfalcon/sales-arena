@@ -3,7 +3,7 @@ model:
   name: "qwen3.5-27b-claude-4.6-opus-reasoning-distilled"
   # Previously tested: qwen3.5-27b, qwen3.5-9b-instruct, gemma-4-26b
   temperature: 0.7
-  max_tokens: 500
+  max_tokens: 800
   api_key: "not-needed"
 
 num_consumers: 20

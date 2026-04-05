@@ -250,50 +250,6 @@ def build_judge_messages(
     ]
 
 
-# --- Analyst ---
-
-ANALYST_SYSTEM_PROMPT = (
-    "Eres un analista experto en ventas. Tu trabajo es revisar conversaciones "
-    "entre un vendedor y clientes, y dar feedback constructivo sobre el desempeño "
-    "del vendedor.\n\n"
-    "Enfocate en:\n"
-    "- ¿Entendió lo que el cliente buscaba?\n"
-    "- ¿Ofreció el producto adecuado?\n"
-    "- ¿Manejó bien las objeciones?\n"
-    "- ¿Usó bien la información del catálogo?\n"
-    "- ¿Aprovechó oportunidades de venta?\n"
-    "- ¿Manejó bien la escasez de stock?\n"
-    "- ¿Ofreció alternativas cuando correspondía?\n\n"
-    "Sé concreto y accionable. No des feedback genérico.\n"
-    "Respondé en español, en formato de texto libre (no JSON)."
-)
-
-
-def build_analyst_messages(
-    conversation: Conversation,
-    catalog_text: str,
-) -> list[dict]:
-    """Build messages for the analyst LLM."""
-    conv_text = _format_conversation_text(conversation)
-
-    user_msg = (
-        f"=== CATÁLOGO ===\n{catalog_text}\n\n"
-        f"=== CONVERSACIÓN ({conversation.id}, perfil: {conversation.consumer_profile}) ===\n"
-        f"{conv_text}\n\n"
-        f"Resultado: {conversation.outcome}\n"
-    )
-    if conversation.sale_details:
-        user_msg += (
-            f"Producto vendido: {conversation.sale_details.get('product', '?')}\n"
-            f"Precio: ${conversation.sale_details.get('price', '?')}\n"
-        )
-
-    return [
-        {"role": "system", "content": ANALYST_SYSTEM_PROMPT},
-        {"role": "user", "content": user_msg},
-    ]
-
-
 # --- Helpers ---
 
 

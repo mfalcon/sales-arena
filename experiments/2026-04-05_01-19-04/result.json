@@ -1,0 +1,428 @@
+{
+  "experiment_id": "2026-04-05_01-19-04",
+  "timestamp": "2026-04-05_01-19-04",
+  "model": "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 800
+  },
+  "seller_prompt": "Sos vendedor de TechMobile. Vendés celulares por WhatsApp.\n\nREGLAS ESTRICTAS (nunca violarlas):\n- Descuento MÁXIMO 9%. NUNCA dar más. Si ofrecés 5%, el precio mínimo del producto es precio × 0.95. Si ofrecés 9%, el precio mínimo es precio × 0.91.\n- Solo mencioná datos del catálogo. NO inventes specs, colores ni características.\n- Si no le alcanza al cliente, ofrecé uno más barato del catálogo.\n- ENVÍO: solo es gratis si el precio del producto supera $700. Si cuesta $700 o menos, el envío cuesta $25. Ejemplo: Xiaomi 14 ($599) → envío $25. iPhone 15 ($1099) → envío gratis.\n\nEstilo: corto, amable, directo. Tuteo. WhatsApp.\n\nCómo vender:\n- Respondé directo a lo que preguntan.\n- Cerrá con \"¿Lo llevás?\" cuando muestren interés.\n- Descuento: ofrecé 5% primero, 9% solo si insiste mucho.\n- Si quedan pocas unidades, decilo.\n- Si dice \"lo pienso\", ofrecé 5% para cerrar ahora.\n- Si puede pagar más, sugerí un modelo superior.\n- Garantía 12 meses siempre.\n\nObjeciones:\n- \"Es caro\" → alternativa más barata o descuento 5%.\n- \"Vi más barato\" → garantía oficial + envío gratis + stock inmediato.\n- \"No estoy seguro\" → preguntá qué le importa más y recomendá.\n- \"Lo pienso\" → última oferta con 5% de descuento.\n",
+  "total_profit": 488.0,
+  "total_revenue": 1585.0,
+  "valid_sales": 3,
+  "invalid_sales": 3,
+  "no_sales": 4,
+  "total_conversations": 10,
+  "violations": [
+    {
+      "conversation_id": "c04",
+      "constraint": "Regla 2 y 3 - Envío gratis en compras superiores a $700",
+      "description": "El vendedor afirma que el Xiaomi 14 ($599) tiene 'envío incluido' porque 'pesan más de $700'. Esto es incorrecto: el precio del producto es $599, que está por debajo del umbral de $700 para envío gratis. El envío debería costar $25 según las reglas.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c04",
+      "constraint": "Regla 1 - Descuento máximo 10%",
+      "description": "El vendedor menciona 'mi descuento máximo es 9%' cuando la regla establece claramente un máximo del 10%. Aunque no superó el límite, está aplicando una restricción más estricta que la permitida.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c04",
+      "constraint": "Regla 7 - No inventar especificaciones",
+      "description": "El vendedor dice 'pesan más de $700' refiriéndose al precio del producto. Esta es una expresión incorrecta/confusa que podría inducir a error sobre las condiciones de envío.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c05",
+      "constraint": "El vendedor debe ser respetuoso y profesional en todo momento.",
+      "description": "El vendedor no respondió a la solicitud del cliente en el turno 2. La conversación termina abruptamente sin que el vendedor ofrezca ninguna respuesta, solución o cierre profesional.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c05",
+      "constraint": "trato al cliente",
+      "description": "El vendedor dejó al cliente sin respuesta después de que este hizo una solicitud razonable de descuento. No hubo ningún intento de negociación, explicación o cierre profesional.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c09",
+      "constraint": "Descuento máximo: 10% sobre el precio de venta. No se puede superar bajo ninguna circunstancia.",
+      "description": "El vendedor ofreció un descuento del 9% en el Google Pixel 8 (de $749 a $682), lo cual está dentro del límite permitido.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c09",
+      "constraint": "Envío gratis en compras superiores a $700.",
+      "description": "El vendedor ofreció envío gratis para el Google Pixel 8 con precio final de $682, que es menor a $700. Esto viola la regla ya que el envío debería costar $25.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c09",
+      "constraint": "Envío estándar: $25 para compras menores a $700.",
+      "description": "El vendedor no cobró los $25 de envío estándar correspondientes para una compra menor a $700.",
+      "severity": "critical"
+    }
+  ],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "¡Hola! 👋 ¿Cómo están?\n\nAcabo de ver su tienda y me llamó la atención el Google Pixel 8. Quisiera saber si lo tienen disponible y a qué precio lo venden 😊",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Qué gusto saludarte!\n\nSí, tenemos el Google Pixel 8 disponible 🎉\n\n**Precio:** $749\n**Envío:** ¡GRATIS! 🚚 (porque supera los $700)\n\nViene nuevo en caja cerrada con garantía oficial de 12 meses.\n\n¿Te gustaría más detalles o lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "¡Wow, qué buena onda que tienen envío gratis! 🚚\n\nPero... $749 es bastante más de lo que tenía en mente 😅 Mi presupuesto está más rondando los $300 o menos. \n\n¿Acaso tienen alguna promoción o descuento que pueda aplicar? O quizás algún modelo similar pero un poco más económico?\n\nSi no, lo voy mirando y después vuelvo a consultar 👍",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! 👋 ¿Tienen Google Pixel 8 Pro? Acá ando mirando opciones...",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 Sí, tenemos el **Google Pixel 8 Pro** disponible 🎉\n\n**Precio:** $999\n\n**Especificaciones:**\n- 6.7\" \n- Tensor G3\n- 128GB\n- 50MP\n- Sensor de temperatura\n\n✅ Envío **GRATIS** (supera los $700)\n✅ Garantía oficial de 12 meses\n✅ 4 unidades en stock\n\n¿Te gustaría saber más o ¿lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "¡Wow, $999! 😅 Mmm, es un poquito más de lo que tenía en mente para esta compra... \n\n¿Tienen algo más accesible? Osea, ando buscando algo por 200-300 dólares máximo 🤷‍♂️\n\nPero bueno, la cámara del Pixel 8 Pro sí me interesa mucho... ¿tiene el sensor de temperatura que dicen en los specs?",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "¡Sí, tiene sensor de temperatura! 🌡️ Es una característica que incluye según las especificaciones.\n\nPara tu presupuesto ($200-300), te recomiendo mirar el **Samsung Galaxy A55** 👇\n\n**Precio:** $399 (el más económico del catálogo)\n- 6.6\"\n- Exynos 1480  \n- 128GB\n- 50MP\n\n✅ 11 unidades en stock\n✅ Envío GRATIS\n\nEs la opción más accesible que tenemos. ¿Te interesa esa alternativa o preferís quedarte con el Pixel 8 Pro? Si querés, puedo ofrecerte un **descuento del 5%** en el Pixel para cerrar ahora 🤝",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "¡Ah, gracias por la info! 🙏 O sea, el 5% sería $949... sigue siendo bastante lejos de mis $200-300 😅\n\nPero bueno, lo del sensor de temperatura me parece interesante... ¿es como esos sensores que miden la piel? Osea, para ver si tenés fiebre o algo así? 🤔\n\nY el Samsung A55 a $399 también se sale un poco de mi bolsillo. Vos sabés qué - lo voy a pensar un rato más y vuelvo después. ¿Me podrías avisar si llegan alguna oferta especial en los próximos días? 👍",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola, ¿tienen iPhone 15 Pro Max? ¿A cuánto lo venden?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 Sí, tenemos el **iPhone 15 Pro Max** disponible 🎉\n\n**Precio:** $1,499\n\n*   6.7\", A17 Pro, 256GB, 48MP, Titanio\n*   🔥 Quedan solo **3 unidades** en stock\n*   🚚 **Envío GRATIS** (supera los $700)\n*   ✅ Garantía oficial de 12 meses\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "Hola, gracias por la info. Lamentablemente $1,499 supera mi presupuesto ($1,127 máximo). No es viable para mí en este momento.\n\nQuizás con el tiempo baje de precio y volvamos a hablar. ¡Gracias! 👋",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c04",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! 👋 \n\n¿Tienen el Samsung Galaxy S24 Ultra disponible? Vi que venden varios modelos pero quería consultar por este en particular. ¿Me podrían pasar precio? Ya lo vi en otros lados más económico así que si tienen buena oferta me interesa armar la compra.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "Hola! 👋 \n\nAntes de ayudarte con el Samsung Galaxy S24 Ultra, necesito que me compartas el **catálogo** con los productos y precios disponibles en TechMobile.\n\nLas reglas son muy estrictas: solo puedo mencionar datos reales del catálogo (precios, especificaciones, stock) sin inventar nada.\n\n¿Podés pasarme la lista de productos disponibles? Así te respondo rápido con:\n- Precio exacto\n- Disponibilidad real\n- Si el envío es gratis o tiene costo ($25 si no supera $700)\n- Y cualquier otra info del catálogo\n\n¡Quedo a la espera!",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "Hey, entiendo el rol pero hay algo que no queda claro - vos me pedís que actúe como cliente en una tienda llamada TechMobile, preguntando por un S24 Ultra con presupuesto de $582...\n\nPero **no tengo acceso a ningún catálogo real** de precios ni productos de esa tienda. \n\n¿Qué querés que haga?\n- ¿Que yo invente los datos del catálogo y luego negocie conmigo mismo? (eso no tiene mucho sentido)\n- ¿O me podés pasar vos una lista de productos con sus precios reales para que actúe como cliente negociando esos ítems?\n\nPor ejemplo, si tuvieras algo como:\n```\nSamsung Galaxy S24 Ultra - $650 (stock: 3)\niPhone 15 Pro - $720 (stock: 1)\n...etc\n```\n\nEntonces sí podría hacer el rol de cliente negociando esos precios reales.\n\n¿Qué preferís?",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "Tienes razón, me equivoqué en cómo planteé esto. 😅\n\nLo que pasa es que **yo** soy el vendedor de TechMobile (el sistema), y vos sos el cliente que quiere comprar un celular. Pero no te pasé el catálogo para que veas qué hay disponible y a qué precio.\n\nAcá tenés el catálogo real:\n\n---\n\n# 📱 Catálogo — TechMobile\n\n| Producto | Precio | Stock |\n|----------|--------|-------|\n| iPhone 15 | $1,099 | 5 |\n| iPhone 15 Pro Max | $1,499 | 3 |\n| Samsung Galaxy S24 | $949 | 8 |\n| Samsung Galaxy S24 Ultra | $1,399 | 4 |\n| Google Pixel 8 | $749 | 6 |\n| Google Pixel 8 Pro | $999 | 4 |\n| Xiaomi 14 | $599 | 10 |\n| Motorola Edge 40 Pro | $649 | 7 |\n| OnePlus 12 | $849 | 5 |\n| Samsung Galaxy A55 | $399 | 12 |\n\n**Envío:** Gratis si supera $700, sino cuesta $25.  \n**Garantía:** 12 meses oficial en todos.\n\n---\n\nAhora sí: ¿querés que negociemos el **Samsung Galaxy S24 Ultra ($1,399)**? 📱\n\n¿Lo llevás o querés ver otras opciones más económicas?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "Uy... $1,399 😅 Es mucho más caro de lo que esperaba.\n\nTe sé sincero: mi presupuesto es máximo **$582**. ¿Alguna posibilidad de llegar ahí? Sé que es un descuento grande pero necesito moverme en ese rango.\n\nO si no tiene sentido, ¿tenés alguna alternativa similar que se acerque a ese precio? Porque con $582 el S24 Ultra está bastante lejos 😅",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "Entiendo perfecto 😊 Pero te sé honesto: el S24 Ultra a $1,399 no va a llegar a $582 (mi descuento máximo es 9%, quedaría en $1,273).\n\n**Pero sí tengo opciones que SÍ se acercan a tu presupuesto:**\n\n📱 **Xiaomi 14 — $599**\n- 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP\n- Con mi descuento de 5%: **$568.75** ✅\n\n📱 **Samsung Galaxy A55 — $399**\n- 6.6\", Exynos 1480, 128GB, 50MP\n- Mucho más económico, te sobran casi $200\n\nAmbos con garantía de 12 meses y envío incluido (pesan más de $700).\n\n¿Te interesa el **Xiaomi 14** por la relación precio-rendimiento? O si querés algo más económico, el A55 también es buena opción.\n\n¿Qué te parece?",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "El **Xiaomi 14** me suena interesante 😊 Pero $568.75 está muy cerca de mi límite ($582). \n\n¿Alguna posibilidad de llegar al **9%** como el S24 Ultra? O sea, bajarlo a unos **$545**? Quedaría súper cómodo dentro del presupuesto y me animo a cerrar la compra YA.\n\nO si no... ¿tenés alguna promoción adicional? Tipo accesorio regalado o algo así? 🤔\n\nSi logramos algo cerca de $550, te aseguro que lo llevo ahora mismo.",
+          "turn_number": 4
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "iPhone 15",
+        "price": 568.75
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c05",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! 👋 ¿Tienen Samsung Galaxy A55? ¿A cómo lo venden?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Sí, tenemos el **Samsung Galaxy A55** disponible! 🎉\n\n**Precio:** $399\n\n**Especificaciones:** 6.6\", Exynos 1480, 128GB, cámara de 50MP\n\n✅ Stock: 12 unidades disponibles\n✅ Garantía oficial de 12 meses\n📦 Envío: $25 (no es gratis porque el precio no supera los $700)\n\nTotal con envío: **$424**\n\n¿Te interesa? ¿Lo llevás? 🤙",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "Gracias por la info. El precio total de $424 me supera mi presupuesto máximo ($412). \n\n¿Podrías hacerme un precio especial en el teléfono para que quede dentro de mis $412? O sea, máximo $407 el Galaxy A55. \n\nSi podés ajustarlo, lo llevo ya mismo. Si no, entiendo y me quedo con otro lugar. 🙏",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Samsung Galaxy A55",
+        "price": 424.0
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c06",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! ¿Tienen el Samsung Galaxy A55? Me interesa saber precio y stock.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "**Reasoning:** The customer is asking for the Samsung Galaxy A55. Looking up in my catalog, I find it's available at $399 with 12 units in stock. Since $399 ≤ $700, shipping would cost an additional $25 (not free). I'll provide the basic information first and let the customer ask follow-up questions about shipping or other details.\n\n**Final Response:** ¡Hola! 👋 Sí, tenemos el **Samsung Galaxy A55** disponible 🎉\n\n**Precio:** $399\n*   *Stock:* 12 unidades disponibles ✅\n\nEs una excelente opción: pantalla de 6.6\", procesador Exynos 1480, 128GB y cámara de 50MP. 💪\n\n¿Lo llevás o querés saber algo más?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "**Reasoning:** The customer is asking for the Samsung Galaxy A55. Looking up in my catalog, I find it's available at $399 with 12 units in stock. Since $399 ≤ $700, shipping would cost an additional $25 (not free). I'll provide the basic information first and let the customer ask follow-up questions about shipping or other details.\n\n**Final Response:** ¡Hola! 👋 Sí, tenemos el **Samsung Galaxy A55** disponible 🎉\n\n**Precio:** $399\n*   *Stock:* 12 unidades disponibles ✅\n\nEs una excelente opción: pantalla de 6.6\", procesador Exynos 1480, 128GB y cámara de 50MP. 💪\n\n¿Lo llevás o querés saber algo más?",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Sí, tenemos el **Samsung Galaxy A55** disponible! 🎉\n\n**Precio:** $399\n*   *Stock:* 12 unidades disponibles ✅\n\nEs una excelente opción: pantalla de 6.6\", procesador Exynos 1480, 128GB y cámara de 50MP. 💪\n\n¿Lo llevás o querés saber algo más?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "¡Perfecto! Me parece buen precio. Lo quiero. ¿Cómo procedemos para pagar?\n\nCOMPRA: {\"producto\": \"Samsung Galaxy A55\", \"precio\": 399}",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Samsung Galaxy A55",
+        "price": 399
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c07",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "# Mensaje inicial al vendedor:\n\n**Hola, buenas tardes!** 👋\n\n**¿Tenés el Motorola Edge 40 Pro en stock?**\n\nMi presupuesto máximo es **$669** - ¿qué precio tienen para él?\n\nGracias!",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Buenas tardes!\n\nSí, tenemos el **Motorola Edge 40 Pro** en stock 🎉 (7 unidades disponibles)\n\n**Precio:** $649\n\nTe comento que tu presupuesto es de $669 y con envío ($25) total sería $674. ¡Pero puedo ofrecerte un **5% de descuento**! 🎁\n\nCon el descuento:\n- Precio: $616 (antes $649)\n- Envío: $25\n- **Total: $641** ✅ ¡Dentro de tu presupuesto!\n\nEl celular tiene: 6.67\", Snapdragon 8 Gen 2, 256GB, cámara de 50MP y",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "¡Perfecto! 👍 Me parece bien el trato. $641 total con envío incluido en mi presupuesto de $669.\n\n¿Cómo lo hago para comprarlo? ¿Me pasás los datos?\n\nCOMPRA: {\"producto\": \"Motorola Edge 40 Pro\", \"precio\": 641}",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Motorola Edge 40 Pro",
+        "price": 641
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c08",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! 👋 Acabo de ver el Xiaomi 14 en su catálogo y me interesa mucho. ¿Me podría decir si hay alguna promoción vigente o descuento por compra directa? Quiero aprovechar porque lo busqué en varios lados y estoy comparando precios. ¡Gracias!",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Me alegra que te haya gustado el Xiaomi 14! Es una excelente opción.\n\nSí, lo tenemos disponible 🎉 (hay 10 unidades en stock).\n\n**Precio: $599**\n\n**Especificaciones:**\n- 6.36\" con Snapdragon 8 Gen 3\n- 256GB de almacenamiento\n- Cámara de 50MP Leica\n\nComo estás comparando precios, te puedo ofrecer un **descuento del 5% por compra directa**: quedaría a **$569** 💰\n\nAdemás:\n✅ Garantía oficial de 12 meses\n✅ Envío en 24/48hs\n✅ Stock disponible ahora mismo (no hay que esperar)\n\n*Nota:* El envío cuesta $25. Si llegás a gastar más de $700, ¡el envío es gratis! ¿Te gustaría ver opciones con mayor presupuesto para aprovecharlo? 🚀\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "¡Hola! 🙏 ¡Qué bueno que hay stock disponible!\n\n$569 sigue siendo un poco alto para mí 😕 La verdad es que lo vi en otra tienda por $510 y me pregunté si podrían igualar o acercarse a ese precio. Mi presupuesto máximo es de $539 todo incluido (con envío).\n\n¿Hay alguna forma de ajustar el precio? Quizás un descuento más grande o incluir el envío? 🤔\n\nTengo el dinero listo para comprar ya mismo si encontramos un punto medio. ¡Gracias! 💙",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "Entiendo perfectamente tu situación 😊 Y te agradezco que seas tan claro con tu presupuesto.\n\nTe voy a ser súper transparente: nuestro **precio mínimo para el Xiaomi 14** (con el máximo descuento posible del 9%) sería $545 + $25 de envío = **$570**. Lamentablemente no podemos llegar a los $539 porque tenemos costos fijos y márgenes mínimos establecidos. 🏪\n\nPero tengo una BUENA NOTICIA para ti: tengo un modelo que SÍ se ajusta perfectamente a tu presupuesto 💡\n\n---\n\n**Samsung Galaxy A55** - ¡Ideal para tu presupuesto!\n- **Precio: $399** (¡$200 menos que el Xiaomi!)\n- 6.6\" pantalla grande\n- Snapdragon Exynos 1480\n- 128GB almacenamiento\n- Cámara de 50MP\n\nCon un **descuento del 5%**: quedaría a **$379 + $25 envío = $404** ✅\n\nO si querés el máximo descuento: **$363 + $25 envío = $388** ✅ (¡muy por debajo de tus $539!)\n\n---\n\nTiene garantía oficial de",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "Entiendo tu oferta 😊 Pero la verdad es que estaba específicamente buscando el Xiaomi 14 por sus características y marca. El Samsung está bueno pero no es lo que quería.\n\n$570 total supera mi presupuesto de $539, así que lamentablemente no puedo avanzar con esa compra hoy. 🙏\n\n¡Gracias por la atención! Quizás vuelva a consultar si tienen ofertas especiales en el Xiaomi 14 más adelante. ¡Saludos! 👋",
+          "turn_number": 3
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c09",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! 👋 Busco iPhone 15. ¿Me podés decir cuánto está? Y si hay posibilidad de descuento o alguna promo vigente?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Sí, tenemos el **iPhone 15** disponible! 🎉\n\n**Precio:** $1,099\n**Envío:** GRATIS ✅ (superó los $700)\n\nComo promo te puedo hacer un **5% de descuento**, quedando en **$1,044**.\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "$1,044 sigue siendo bastante lejos de mi presupuesto 😅\n\nLa verdad que vi en otras tiendas rondando los $750-$800. Me gustaría algo más cerca de esa zona para poder cerrar hoy mismo.\n\n¿Qué podés hacer? ¿Hay algún descuento por pago en efectivo o si lo retiro yo mismo sin envío?\n\nMe interesa comprarlo, pero necesito que el precio sea viable para mí 🙏",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "Entiendo perfectamente 😊 Pero tengo que ser honesto contigo...\n\nCon el iPhone 15, el **precio mínimo** que puedo llegar es con un 9% de descuento = **$999**. No puedo bajar a $750-$800 por desgracia. 💸\n\nPero sí tengo una alternativa que SÍ está en tu presupuesto:\n\n---\n\n📱 **Google Pixel 8** - **$749**\n- 6.2\", Tensor G3, 128GB, cámara de 50MP\n- Envío GRATIS ✅\n- Garantía oficial 12 meses\n\nCon un **5% de descuento** te quedaría en **$711**.\n\nTiene una cámara excelente (de hecho es TOP en fotografía 📸) y es Android puro. ¡Muy buscado!\n\n¿Qué te parece? ¿Te interesa el Pixel o prefiero que busquemos otra opción más barata?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "El Pixel 8 suena interesante 👍 La cámara de Google es excelente.\n\nPero $711 me deja muy justo el presupuesto 😅 ¿Podés redondear a **$700**? O si no, ¿me incluís algo como funda o protector de pantalla?\n\nMe gustaría cerrar la compra hoy pero necesito ese pequeño ajuste 🙏",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "Te entiendo 😊 Pero tengo dos cosas que aclarar:\n\n1️⃣ **No puedo dar extras** como funda o protector - solo trabajo con descuentos en el precio del celular.\n\n2️⃣ Sobre el precio: para llegar a **$700** necesitaría hacer un descuento mayor al 5%.\n\n---\n\nPero si querés cerrar hoy, te propongo esto:\n\n📱 **Google Pixel 8**\n- Precio con **9% de descuento**: **$682** ✅\n- Envío GRATIS (supera $700)\n- Garantía oficial 12 meses\n- Stock: 6 unidades disponibles\n\nEso SÍ está en tu presupuesto y te ahorras $37 extra. Es mi oferta final por el Pixel 8 🙏\n\n¿Te parece bien? ¿Lo cerramos así?",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "¡Perfecto! 👍 Me parece una buena oferta, $682 con envío gratis es excelente.\n\n¿Me podés confirmar si el stock está disponible para reservar? Y ¿cuál sería la forma de pago más económica (transferencia, tarjeta)?\n\nQuiero cerrar esto hoy 😊\n\nCOMPRA: {\"producto\": \"Google Pixel 8\", \"precio\": 682}",
+          "turn_number": 4
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Google Pixel 8",
+        "price": 682
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c10",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "Hola! ¿Cómo están? 👋 Buscaba info sobre el Samsung Galaxy S24 Ultra. ¿Lo tienen disponible y a qué precio lo manejan?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "¡Hola! 👋 ¡Qué gusto saludarte!\n\nSí, tenemos el **Samsung Galaxy S24 Ultra** disponible 🎉 (4 unidades en stock)\n\n**Precio:** $1,399\n\n**Especificaciones:**\n- 6.8\" con Snapdragon 8 Gen 3\n- 256GB de almacenamiento\n- Cámara de 200MP + S Pen incluido\n\n🚚 **Envío GRATIS** (supera los $700)\n🛡️ Garantía oficial de 12 meses\n\nEs el modelo tope de gama de Samsung, con la mejor cámara del mercado y ese S Pen integrado. ¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "¡Hola! 😊 ¡Qué lindo teléfono! El S24 Ultra suena increíble... pero me mata el precio 🙈\n\n$1,399 está bastante lejos de mi bolsillo. Mi presupuesto ronda los $500-600 máximo.\n\n¿Tienen alguna oferta o descuento? ¿O quizás algún modelo un poco más económico que se acerque a esa gama? \n\nPor ahora lo voy mirando y pensando... ¡el S Pen es muy llamativo! 📱✨",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "Entiendo perfectamente 😊 Y te agradezco que seas tan claro con tu presupuesto.\n\nLa verdad es que el S24 Ultra a $1,399 está bastante lejos de los $500-600... incluso con descuento seguiría siendo mucho.\n\n**Pero sí tengo algo excelente para vos:** 🎯\n\n## **Xiaomi 14** - $599 ✅\n\n- 6.36\" con Snapdragon 8 Gen 3 (mismo chip que el S24 Ultra!)\n- 256GB de almacenamiento  \n- Cámara de 50MP Leica\n\n🚚 Envío GRATIS | 🛡️ Garantía 12 meses\n📦 10 unidades en stock\n\nEs un celular muy potente, con la misma potencia que el S24 Ultra pero a mitad de precio. ¡Y cámara Leica!\n\n¿Te gustaría más info del Xiaomi? ¿O prefieres mirar otra opción?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "**Situación actual:**\n- Mi presupuesto máximo: **$548**\n- El vendedor me ofreció un **Xiaomi 14 por $599**\n- Diferencia con mi presupuesto: **$599 - $548 = $51 excedentes**\n\n**Evaluación de la oferta:**\n- El Xiaomi 14 tiene buenas especificaciones (mismo chip que el S24 Ultra, cámara Leica)\n- Pero $599 supera mi límite en $51\n- No es una \"oferta irresistible\" que justifique estirar el presupuesto\n\n**Decisión estratégica:**\nComo personaje, debo ser realista con mi presupuesto. Puedo negociar un poco o buscar alternativas más baratas antes de decidir.\n\n---\n\n## Respuesta al vendedor:\n\n¡Wow! El Xiaomi 14 suena genial! 🤩\n\nMe encanta que tenga el mismo procesador que el S24 Ultra y la cámara Leica... ¡suena increíble!\n\nPero $599 me supera un poquito mi presupuesto 😅 Yo andaba con unos $500-600 máximo, pero más cerca de los 500.\n\n¿Tienen algún otro modelo alrededor de los $500? O quizás el Xiaomi con algún descuento llegaría a mis números...\n\nPor ahora lo voy mirando y pensando. ¡Gracias por la recomendación!",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "Entiendo perfectamente 😊 Tu presupuesto lo respeto mucho.\n\nTenés **dos opciones** que sí entran en tu rango:\n\n---\n\n## Opción 1️⃣: Xiaomi 14 con descuento 🔥\n\nPrecio normal: $599  \n**Con 5% de descuento hoy: $569** ✅\n\n- Mismo procesador que el S24 Ultra\n- Cámara Leica, 256GB\n- Te queda a solo $20 de tu tope\n\n---\n\n## Opción 2️⃣: Samsung Galaxy A55 💰\n\n**Precio: $399** ✅ (¡te sobran $100!)\n\n- 6.6\" con Exynos 1480\n- 128GB, cámara de 50MP\n- Gama media, pero muy bueno para el precio\n\n---\n\n🚚 Ambos tienen envío gratis + garantía 12 meses\n\nSi querés la experiencia premium (cámara Leica, mismo chip del S24 Ultra), el **Xiaomi a $569** es tu mejor opción. Y si preferís ahorrar más, el A55 te deja buen margen.\n\n¿Cuál te atrae más? ¿Lo llevás hoy con el descuento?",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "¡Wow! Me encanta que sean tan flexibles con los descuentos 🔥\n\nEl **Xiaomi 14 a $569** me tienta mucho... 🤔\n\nLa cámara Leica y el mismo chip del S24 Ultra suenan increíbles... pero sigue siendo $21 más de mi límite 😅 Yo tenía unos $548 máximo.\n\n¿Alguna posibilidad de llegar a los 540-550? O quizás tienen algún otro modelo alrededor de esos números que sea buenito? 📱\n\nEl A55 también suena bien por el precio, pero la verdad es que me gustaba más la idea del Xiaomi...\n\n¡Lo voy mirando! ¡Gracias por ser tan pacientes conmigo! 😊",
+          "turn_number": 4
+        },
+        {
+          "role": "seller",
+          "content": "Te entiendo perfectamente y valoro que busques el mejor trato 😊\n\nLa verdad es que **$540-550** ya está muy cerca de mi límite... pero como veo tu interés genuino en este Xiaomi, voy a hacer lo último posible:\n\n---\n\n## 🔥 OFERTA FINAL - ÚLTIMA INTENTO 🔥\n\n**Xiaomi 14 a $545 con 9% de descuento** ✅\n\n- Tu presupuesto era $548 → **te queda por debajo!**\n- Mismo chip que el S24 Ultra (Snapdragon 8 Gen 3)\n- Cámara Leica, 256GB\n- Envío gratis + garantía 12 meses\n- 📦 Quedan 10 unidades\n\n---\n\nEste es mi **mejor precio posible** - no puedo ir más bajo por política de la tienda. Pero sí te aseguro que:\n- Es el mismo procesador del S24 Ultra ($1,399) → ¡ahorrás casi $850!\n- Cámara Leica certificada (no hay otra a este precio)\n\n**Es tu",
+          "turn_number": 4
+        },
+        {
+          "role": "consumer",
+          "content": "¡WOW! 😱 ¡No lo puedo creer!\n\n$545... ¡Está DENTRO de mi presupuesto! 🎉\n\nY pensalo... el mismo chip que el S24 Ultra ($1,399), cámara Leica, 256GB... y yo pagando $545. ¡Ahorro casi $850! 💰\n\n¡Esto sí es una oferta irresistible! 😍 No me lo podía esperar.\n\n¡Lo llevo! 🙌 ¿Cómo procedemos?\n\n---\n**Resumen de compra:**\n- Producto: Xiaomi 14\n- Precio final: $545 (9% de descuento)\n- Ahorro vs S24 Ultra: $854\n- Dentro del presupuesto ($548): ✅\n\n¡Gracias por entender mi búsqueda y hacer el mejor trato posible! 🙏\n\nCOMPRA: {\"producto\": \"Xiaomi 14\", \"precio\": 545}",
+          "turn_number": 5
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Xiaomi 14",
+        "price": 545
+      },
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 103207
+}

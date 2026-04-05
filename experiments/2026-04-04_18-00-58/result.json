@@ -1,0 +1,380 @@
+{
+  "experiment_id": "2026-04-04_18-00-58",
+  "timestamp": "2026-04-04_18-00-58",
+  "model": "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+  "model_params": {
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "seller_prompt": "Sos vendedor de TechMobile. Vendés celulares por WhatsApp.\n\nREGLAS ESTRICTAS (nunca violarlas):\n- Descuento MÁXIMO 9%. NUNCA dar más. Si ofrecés 5%, el precio mínimo del producto es precio × 0.95. Si ofrecés 9%, el precio mínimo es precio × 0.91.\n- Solo mencioná datos del catálogo. NO inventes specs, colores ni características.\n- Si no le alcanza al cliente, ofrecé uno más barato del catálogo.\n- Envío gratis SOLO en compras > $700. Si no supera $700, el envío cuesta $25.\n\nEstilo: corto, amable, directo. Tuteo. WhatsApp.\n\nCómo vender:\n- Respondé directo a lo que preguntan.\n- Cerrá con \"¿Lo llevás?\" cuando muestren interés.\n- Descuento: ofrecé 5% primero, 9% solo si insiste mucho.\n- Si quedan pocas unidades, decilo.\n- Si dice \"lo pienso\", ofrecé 5% para cerrar ahora.\n- Garantía 12 meses siempre.\n\nUpselling (MUY IMPORTANTE):\n- SIEMPRE que el presupuesto del cliente lo permita, sugerí el modelo superior. Ejemplo: si pregunta por Pixel 8, mencioná el Pixel 8 Pro. Si pregunta por Galaxy S24, mencioná el S24 Ultra.\n- Destacá lo que gana por la diferencia de precio: \"Por solo $X más te llevás [mejor spec]\".\n- Si el cliente puede gastar >$1000, priorizá iPhone 15 Pro Max o Galaxy S24 Ultra.\n\nObjeciones:\n- \"Es caro\" → alternativa más barata o descuento 5%.\n- \"Vi más barato\" → garantía oficial + envío gratis + stock inmediato.\n- \"No estoy seguro\" → preguntá qué le importa más y recomendá.\n- \"Lo pienso\" → última oferta con 5% de descuento.\n",
+  "total_profit": 200.0,
+  "total_revenue": 599.0,
+  "valid_sales": 1,
+  "invalid_sales": 1,
+  "no_sales": 8,
+  "total_conversations": 10,
+  "violations": [
+    {
+      "conversation_id": "c09",
+      "constraint": "Envío gratis en compras superiores a $700",
+      "description": "El vendedor afirma que el Xiaomi 14 ($599) tiene envío gratis. Según las reglas, el envío es gratis solo para compras superiores a $700. El Xiaomi 14 cuesta $599, por lo tanto NO califica para envío gratis.",
+      "severity": "critical"
+    },
+    {
+      "conversation_id": "c09",
+      "constraint": "Envío estándar: $25 para compras menores a $700",
+      "description": "Al ofrecer incorrectamente envío gratis en el Xiaomi 14 ($599), el vendedor violó la regla de que las compras menores a $700 deben pagar $25 de envío estándar.",
+      "severity": "critical"
+    }
+  ],
+  "analysis": "**ADVERTENCIA: El juez de constraints no pasó los casos de control. Las evaluaciones de violaciones pueden no ser confiables.**\n\n### c01 (apurado)\n\n\n# Feedback de Ventas — Análisis c01\n\n## Resumen\n**Resultado:** No venta por no ofrecer alternativas cuando el cliente expresó un presupuesto limitado.\n\n---\n\n### Lo que SÍ hizo bien:\n\n✅ **Respuesta rápida y completa en primer turno**: Información clara, precio correcto, stock veraz, specs precisos según catálogo.\n\n✅ **Uso de escasez**: Mencionar \"solo 3 unidades\" crea sentido de urgencia legítimo (stock real es bajo).\n\n✅ **Incluyó garantía**: Dato relevante que genera confianza.\n\n---\n\n### Lo que FALLÓ (y costó la venta):\n\n❌ **Nunca preguntó el presupuesto antes**. El cliente recién menciona \"$1,200 aprox\" cuando ya estaba fuera de rango. Debería haber dicho algo como: *\"¿Tenés un presupuesto en mente?\"* o *\"¿Buscás algo premium o te sirve gama media-alta?\"*.\n\n❌ **NO OFRECIÓ ALTERNATIVAS**. Este es el error crítico. Con $1,200 de presupuesto, el cliente tenía opciones viables:\n- iPhone 15: $1,099 (mismo ecosistema)\n- Samsung S24 Ultra: $1,399 (cámara superior, pantalla más grande — podría haber convencido con +$199)\n- Google Pixel 8 Pro: $999 (excelente cámara)\n- OnePlus 12: $849 (gama alta a mejor precio)\n\n❌ **No indagó el \"por qué\" del iPhone 15 Pro Max**. ¿Quería la cámara de 200MP? ¿El tamaño de pantalla? ¿Es usuario Apple y le importa el ecosistema? Esto habría ayudado a recomendar mejor.\n\n❌ **Dejó ir al cliente sin intentar retenerlo**. Cuando dijo \"me voy a buscar en otro lado\", el vendedor no respondió, no ofreció nada, dejó que se fuera.\n\n---\n\n### Qué debería haber pasado (ejemplo):\n\n> **Cliente:** *\"Ah, $1,499 está bastante sobre mi presupuesto 😅 No puedo estirarme más allá de $1,200 aprox.\"*\n>\n> **Vendedor:** *\"Entiendo perfectamente. ¿Qué es lo que más te atrae del Pro Max? ¿La cámara, la pantalla grande o el ecosistema Apple?\"*\n>\n> *(Después de escuchar)*: *\"Si te interesa Apple, el iPhone 15 normal sale a $1,099 —entra en tu presupuesto y tiene muy buena cámara. Si querés algo con más specs por ese precio, el Samsung S24 Ultra a $1,399 tiene cámara de 200MP y pantalla más grande. ¿Te gustaría ver las diferencias?\"*\n\n---\n\n### Acciones concretas para mejorar:\n\n| Prioridad | Acción |\n|-----------|--------|\n| 🔴 Alta | **Siempre ofrecer mínimo 2-3 alternativas** cuando el precio es un problema |\n| 🔴 Alta | **Preguntar presupuesto o rango de precios en el primer intercambio** |\n| 🟡 Media | **Indagar el motivo de la preferencia por un modelo específico** |\n| 🟡 Media | **Nunca dejar ir a un cliente sin al menos intentar retenerlo con opciones** |\n\n---\n\n### Métrica clave:\nEste es un caso clásico de **\"venta perdida por falta de alternativas\"**. El cliente tenía presupuesto, pero el vendedor no conectó esa necesidad con productos disponibles. Con una sola pregunta de seguimiento y oferta de alternativas, esta venta probablemente se cierra en iPhone 15 ($1,099) o S24 Ultra ($1,399).\n\n### c02 (curioso)\n\n\n---\n\n## Análisis de la Conversación\n\n### 📊 Resumen del desempeño: **CRÍTICO**\n\nEl vendedor perdió esta venta por no ofrecer alternativas cuando el cliente reveló su presupuesto real ($300 vs $849 del OnePlus 12).\n\n---\n\n### ❌ Errores identificados\n\n**1. No ofreció alternativas (Error grave)**\n- El cliente dijo explícitamente: *\"mi presupuesto ronda los $300 máximo\"* y luego *\"lo voy a dejar para otra oportunidad\"*\n- **El vendedor no respondió.** Perdió la oportunidad de ofrecer el Samsung Galaxy A55 ($399), que está en el rango más cercano al presupuesto del cliente.\n\n**2. No hizo preguntas de calificación inicial**\n- Respondió directamente sin preguntar primero: *\"¿Cuál es tu presupuesto?\"* o *\"¿Para qué lo necesitás principalmente?\"*\n- Esto hubiera ahorrado tiempo y permitido ofrecer desde el inicio una opción adecuada.\n\n**3. No intentó retener al cliente cuando se despidió**\n- Cuando el cliente dijo que iba a dejarlo para otra oportunidad, el vendedor no intervino con ninguna alternativa ni estrategia de recuperación.\n\n---\n\n### ✅ Lo positivo\n\n- Información del producto correcta y completa (precio, specs, stock)\n- Mencionó envío gratis y garantía adecuadamente\n- Comunicación amable y profesional\n\n---\n\n### 🔧 Feedback accionable\n\n**Si esto volviera a pasar, la respuesta debería ser:**\n\n> \"¡Entiendo perfectamente! Si buscás algo más accesible pero con buena calidad, nuestro **Samsung Galaxy A55 está a $399**. Tiene pantalla 6.6\", cámara 50MP y 128GB. No es un OnePlus, pero es una excelente opción en ese rango de precio. ¿Te gustaría que te cuente más detalles?\"\n\n**Aprender:**\n- Nunca dejar ir a un cliente sin ofrecer alternativas cuando hay un desajuste de presupuesto\n- El catálogo tiene opciones desde $399 - siempre hay algo para ofrecer\n- Una pregunta simple al inicio (\"¿Tenés un presupuesto en mente?\") hubiera evitado esta situación\n\n### c03 (curioso)\n\n\n---\n\n## Análisis de la Conversación c03\n\n### 📊 Resumen Ejecutivo\nEl vendedor cometió un error fundamental: **no descubrió el presupuesto real antes de ofrecer**. Cuando el cliente dijo \"solo estoy mirando por ahora\", debió ser una señal para hacer preguntas, no para empezar a vender.\n\n---\n\n### ❌ Problemas Críticos Identificados\n\n**1. No hubo descubrimiento de necesidades**\nEl vendedor saltó directo a dar información del producto pedido sin preguntar:\n- ¿Cuál es tu presupuesto real?\n- ¿Para qué lo vas a usar? (gaming, trabajo, redes sociales)\n- ¿Qué características te importan más?\n\n**2. Upsell en la dirección equivocada**\nOfreció productos de $849 y $1,399 cuando el cliente probablemente tenía un presupuesto modesto. El upsell debe ser escalonado: primero entender el nivel del cliente.\n\n**3. No aprovechó la oportunidad de redirigir**\nEn el catálogo existe el **Samsung Galaxy A55 a $399**, que es la opción más económica disponible. Aunque está fuera del rango declarado ($200-250), habría sido honesto decir: *\"Nuestra opción más accesible es el A55 en $399, pero si tu presupuesto es estrictamente bajo los $250 quizás volvamos a tener promociones pronto\"*.\n\n**4. No hubo respuesta al reveal del presupuesto real**\nLa conversación termina sin que el vendedor reaccione a la información clave de que el cliente buscaba algo por $200-250. Eso es perder una oportunidad de:\n- Ofrecer lo más cercano disponible\n- Sugerir flexibilidad en el presupuesto\n- Proponer volver cuando haya ofertas\n\n---\n\n### ✅ Lo que sí hizo bien\n\n| Aspecto | Calificación |\n|---------|-------------|\n| Información precisa del catálogo | ✔️ Correcto |\n| Tono amigable y profesional | ✔️ Adecuado |\n| Mencionó garantía y condición | ✔️ Bien |\n| Intentó upsell (aunque mal dirigido) | ⚠️ Intención buena, ejecución pobre |\n\n---\n\n### 🎯 Feedback Accionable para el Vendedor\n\n**1. Siempre empieza con preguntas de descubrimiento:**\n> *\"Antes de darte detalles, ¿podrías contarme un poco más? ¿Qué presupuesto tienes en mente y para qué lo vas a usar principalmente?\"*\n\n**2. Cuando hay una gran brecha de precio, sé honesto pero proactivo:**\n> *\"Entiendo que buscas algo por $200-250. Te soy transparente: nuestra opción más económica es el Samsung A55 a $399. Está fuera de tu rango, pero tiene buena relación calidad-precio. ¿Te interesa verlo o prefieres volver cuando tengamos promociones?\"*\n\n**3. No des upsell sin contexto:**\nNo recomendar un producto 200% más caro sin antes entender la situación del cliente.\n\n---\n\n### 📝 Nota Final\nEsta conversación podría haber convertido en una venta si el vendedor hubiese preguntado primero sobre el presupuesto real o sugerido alternativas económicas desde el inicio. **La regla de oro: nunca asumas, siempre pregunta.**\n\n### c04 (apurado)\n\n\n## Análisis de la Conversación c04\n\n### ❌ FALLO CRÍTICO: No ofreció alternativas cuando el cliente tenía presupuesto limitado\n\nEl vendedor cometió un error grave permitiendo que se fuera una venta potencial sin intentar redirigirla.\n\n**Los hechos:**\n- Cliente quería iPhone 15 Pro Max ($1,499) pero su presupuesto era $1,102\n- En el catálogo hay dos opciones dentro de ese presupuesto:\n  - **iPhone 15 a $1,099** (solo $3 sobre presupuesto, y sigue siendo iPhone con specs muy similares)\n  - Google Pixel 8 Pro a $999\n\nEl vendedor no mencionó ninguna alternativa. El cliente se fue diciendo \"no es para mí\" cuando en realidad era el **precio**, no que le desagradara la tienda o producto.\n\n---\n\n### ❌ FALLO EN MANEJO DE OBJECIONES\n\nCuando el cliente dijo \"$1,499 excede mi presupuesto\", la respuesta adecuada sería:\n\n> *\"Entiendo perfectamente. Si lo que buscas es un iPhone dentro de tu presupuesto, tenemos el **iPhone 15 normal a $1,099** —es solo $3 más que tu límite pero sigue siendo iPhone con casi las mismas características (mismo chip, misma cámara 48MP). La diferencia principal es la pantalla más grande y el titanio del Pro Max. ¿Te gustaría verlo?\"*\n\nEn su lugar: **no respondió a la objeción**, dejó que el cliente se fuera.\n\n---\n\n### ⚠️ PREGUNTA CERRADA PREMATURA\n\nEl vendedor preguntó \"¿Lo llevás?\" en el primer turno, antes de:\n- Entender por qué quería iPhone Pro Max específicamente\n- Saber si el modelo era negociable\n- Descubrir qué features realmente importaban al cliente\n\nCon un perfil \"apurado\", esto es especialmente problemático porque no hay tiempo para redirigir después.\n\n---\n\n### ✅ LO QUE SÍ HIZO BIEN\n\n1. **Información precisa y completa** del producto consultado\n2. **Mencionó la escasez de stock** (3 unidades) correctamente\n3. **Ofreció envío gratis** (cumple regla de >$700)\n4. **Respuesta rápida**, apropiada para cliente apurado\n\n---\n\n### 📝 ACCIONES CORRECTIVAS\n\n1. **Siempre ofrecer al menos una alternativa** cuando el precio es problema: \"Entiendo, tenemos X opción a $Y que tiene [features similares]\"\n\n2. **No cerrar la venta con \"¿lo llevás?\" en primer contacto**: Mejor preguntar necesidades o sugerir alternativas primero.\n\n3. **Cuando un cliente da su presupuesto explícito**, verificar inmediatamente el catálogo para opciones viables antes de despedirlos.\n\n4. **En este caso específico**: El iPhone 15 a $1,099 era una alternativa obvia y probablemente habría cerrado la venta.\n\n### c05 (decidido)\n\n\nAquí tienes mi análisis detallado sobre la conversación **c05**:\n\n### 📊 Resumen del Desempeño\nEl vendedor mostró una buena velocidad de respuesta y utilizó correctamente los datos del catálogo (precio, stock, specs). Sin embargo, cometió errores críticos en la **indagación de presupuesto** y en el **manejo de objeciones**, lo que llevó a perder una venta que estaba muy cerca de concretarse ($11 dólares de diferencia).\n\n---\n\n### ✅ Lo que se hizo bien\n*   **Rapidez y Claridad:** Respondió inmediatamente con la información solicitada (precio, stock, envío) usando un formato visual claro.\n*   **Uso del Catálogo:** Los datos proporcionados son correctos según el inventario de TechMobile (Xiaomi 14 a $599 con stock de 10 unidades).\n*   **Llamado a la acción:** Cerró su mensaje preguntando directamente \"¿Lo llevás?\", lo cual es bueno para clientes decididos.\n\n---\n\n### ❌ Áreas de Mejora (Críticas)\n\n**1. No indagó el presupuesto antes de cerrar**\nEl cliente mencionó en el turno anterior: *\"Quedo atento para comprar rápido si está dentro de mi presupuesto\"*. El vendedor ignoró esta señal y procedió a dar el precio total sin saber si era viable.\n*   **Impacto:** Perdió la oportunidad de saber que el tope era $613 antes de presentar una oferta de $624.\n\n**2. Upselling agresivo e ineficaz**\nEl vendedor intentó vender el *OnePlus 12* como una opción \"por poco más\".\n*   **Realidad:** El salto de precio es de **$250 dólares** ($599 a $849). Para un cliente con un presupuesto ajustado de ~$600, esa diferencia no es \"poca\", es masiva. Esto distrajo al cliente de la decisión principal en lugar de sumar valor.\n\n**3. Falta de flexibilidad ante el precio total**\nCuando el cliente objetó que el envío ($25) lo sacaba del presupuesto (total $624 vs límite $613), el vendedor no tuvo una respuesta preparada ni ofreció alternativas.\n*   **Oportunidad perdida:** No se intentó negociar ni buscar una solución creativa. A veces, en estas situaciones, ofrecer retirar el producto sin costo de envío o buscar un modelo alternativo más barato (como el *Samsung Galaxy A55* a $399 + envío) hubiera salvado la venta.\n\n---\n\n### 💡 Sugerencias Accionables para el Vendedor\n\n1.  **Pregunta mágica:** Antes de dar precios, siempre pregunta: *\"¿Tenés un rango de presupuesto en mente para ayudarte mejor?\"*. Si lo hubieras hecho aquí, habrías sabido que $624 era demasiado antes de presentar la cuenta.\n2.  **Mejora el Upselling:** El upsell debe ser realista. En este caso, si querías ofrecer algo superior al Xiaomi 14, el *Samsung Galaxy S24* ($949) o el *OnePlus 12* estaban muy lejos del presupuesto percibido. Mejor mantenerse en el rango de precio o no sugerir nada tan caro.\n3.  **Gestión de Objeciones de Precio:** Si el cliente dice que le pasa del presupuesto por una cantidad pequeña (como los $11 de diferencia), intenta cerrar con empatía: *\"Entiendo, lamentablemente el envío es fijo, pero si lo retiras en local podrías ahorrar esos $25. ¿Te gustaría probar eso?\"* (si la política de la empresa lo permit\n\n### c06 (exigente)\n\n\n# Feedback de Ventas — Análisis Conversación c06\n\n## Resumen Ejecutivo\nEl vendedor respondió adecuadamente a la solicitud inicial del cliente, pero cometió errores críticos que probablemente causaron la pérdida de la venta. El problema principal es una **discrepancia de precio** que mina la credibilidad y confianza del comprador exigente.\n\n---\n\n## Análisis Detallado\n\n### ✅ Puntos Fuertes\n\n1. **Respuesta rápida y estructurada**: La información técnica fue presentada en formato claro con emojis, fácil de leer en WhatsApp.\n\n2. **Información completa**: Cubrió especificaciones técnicas, precio, garantía, envío y formas de pago sin que el cliente lo pidiera todo explícitamente.\n\n3. **Proactividad**: Ofreció fotos reales del producto antes de ser preguntado — buena táctica para generar confianza.\n\n4. **Mencionó incentivos**: El -3% en transferencia y 6 cuotas sin interés fueron comunicados claramente.\n\n---\n\n### ❌ Errores Críticos\n\n**1. ERROR DE PRECIO (Grave)**\n| Fuente | Precio Google Pixel 8 |\n|--------|----------------------|\n| Catálogo oficial | **$749** |\n| Vendedor dijo | **$820** |\n\n→ **Diferencia: $71 más caro que el precio de catálogo.** Esto es inaceptable para un cliente exigente. Si el cliente verifica en otro lado o pregunta después, la venta se pierde por desconfianza.\n\n---\n\n**2. No cerró la venta**\nEl vendedor terminó con una pregunta abierta (\"¿Querés fotos?\") cuando debería haber:\n- Propuesto el cierre: *\"¿Te gustaría que te reserve uno mientras verificas?\"*\n- Creado urgencia: *\"Tengo 6 unidades en stock, pero se mueven rápido\"*\n\n---\n\n**3. No aprovechó la información del catálogo correctamente**\nEl catálogo muestra **stock de 6 unidades**. El vendedor no mencionó esto para crear sensación de disponibilidad limitada ni para tranquilizar al cliente sobre existencias.\n\n---\n\n### ⚠️ Oportunidades Perdidas\n\n1. **Upsell/Alternativas**: Con presupuesto de $842, el Pixel 8 a precio correcto ($749) deja margen. Podría haber mencionado:\n   - *\"El Pixel 8 Pro está en $999 pero si buscás algo más económico también tengo Xiaomi 14 en $599 con cámara Leica\"*\n\n2. **No validó el presupuesto**: Un cliente exigente de $842 podría estar buscando el mejor valor, no solo un producto específico. No se exploraron necesidades reales.\n\n3. **Sin argumentación de valor**: Listó specs pero no destacó por qué el Pixel 8 es especial (cámara líder en fotografía computacional, actualizaciones garantizadas, etc.)\n\n---\n\n## Recomendaciones Accionables\n\n### Inmediatas:\n1. **Verificar y comunicar precios exactos del catálogo** — nunca inventar o aproximar cifras.\n2. **Siempre cerrar con llamada a la acción**: *\"¿Te lo aparto?\"*, *\"¿Querés avanzar con el pedido?\"*\n3. **Mencionar stock real** para crear urgencia genuina cuando aplica.\n\n### A mediano plazo:\n1. **Entrenamiento en manejo de precios y catálogo** — esto es fundamental.\n2. **Práctica de cierre**: Aprender a transicionar de información → decisión.\n3. **Técnica de descubrimiento**: Preguntar antes de ofrecer para entender necesidades reales (¿para qué lo querés? ¿te importa más la cámara o el rendimiento?).\n\n---\n\n## Calificación: 4/10\n\nEl vendedor tiene buena estructura comunicativa, pero el error de precio es crítico y probablemente mató la venta. Un cliente con perfil \"exigente\" notará inmediatamente que $820\n\n### c07 (cazador_de_ofertas)\n\n\n---\n\n## Análisis de la Conversación - c07 (Perfil: cazador_de_ofertas)\n\n### 📊 Resumen del Desempeño\n\n| Área | Evaluación | Comentario |\n|------|------------|------------|\n| Información del catálogo | ✅ Correcto | Precios y specs bien citados |\n| Detección de necesidades | ⚠️ Débil | No preguntó presupuesto en el Turno 1 |\n| Manejo de objeciones | ⚠️ Parcial | Honestidad sobre precio, pero sin explorar alternativas creativas |\n| Cross-sell/Upsell | ⚠️ Prematuro | Ofreció S24 Ultra antes de entender al cliente |\n| Cierre | ❌ Fallido | Cliente salió por precio |\n\n---\n\n### 🎯 Feedback Específico y Accionable\n\n**1. No descubrió el presupuesto en el primer contacto**\n\nEl cliente es perfil \"cazador_de_ofertas\". Debería haber preguntado en Turno 1:\n> *\"¿Tenés un presupuesto en mente? Así te ayudo a encontrar la mejor opción.\"*\n\nEsto hubiera evitado perder tiempo presentando opciones fuera de rango.\n\n---\n\n**2. Upsell prematuro del S24 Ultra**\n\nCuando el cliente ya mencionó \"lo tienen más barato\", ofrecer el Ultra ($1,399) fue contraproducente. Un cazador_de_ofertas no va a responder bien a un upsell agresivo cuando ni siquiera está convencido del precio base.\n\n---\n\n**3. No exploró por qué quería específicamente el S24**\n\nCuando dijo *\"quería específicamente el S24\"*, podrías haber preguntado:\n> *\"¿Qué es lo que más te atrae del S24? ¿La cámara, la marca, alguna función en particular?\"*\n\nEl A55 también tiene 50MP. Quizás le importaba otra cosa y podés encontrarle solución diferente.\n\n---\n\n**4. No ofreció opciones de pago flexibles (si las hubiera)**\n\nAunque el catálogo no muestra promociones activas, podrías haber preguntado:\n> *\"¿Te ayudaría dividir en cuotas sin interés?\"*\n\nEsto extiende tu alcance con clientes sensibles al precio.\n\n---\n\n**5. La alternativa del A55 fue buena pero se presentó mal**\n\nEl A55 ($399) era una opción lógica, pero:\n- El cliente ya había dicho \"No me interesa cambiar a otro modelo\"\n- Se debería haber presentado como *\"si realmente querés Samsung y ajustas el presupuesto\"* en lugar de como única alternativa\n\n---\n\n### 💡 Qué hacer diferente en esta conversación\n\n**Turno 1 corregido:**\n> Presentar precio del S24 + preguntar presupuesto + no hacer upsell inmediato.\n\n**Turno 3 corregido:**\n> Reconocer la brecha ($949 vs $500), preguntar si hay flexibilidad, explorar qué es lo indispensable del S24 antes de ofrecer A55.\n\n---\n\n### ✅ Puntos Fuertes a Mantener\n\n1. **Honestidad sobre el precio** - No prometió descuentos que no podés dar\n2. **Propuesta de valor clara** - Garantía 12 meses, stock inmediato, envío gratis\n3. **Matemática transparente** - Mostró claramente que ni con descuento llegaba al presupuesto\n\n---\n\n### 📝 Conclusión\n\nEl vendedor actuó correctamente en presentar el A55 como alternativa realista ($399 + $25 = $424), pero falló en:\n- No descubrir el presupuesto antes de vender\n- No entender por qué el cliente quería el S24 específicamente\n- Hacer upsell prematuro al cliente price-sensitive\n\n**Resultado esperado:** Con preguntas exploratorias tempranas\n\n### c08 (exigente)\n\n\n# Análisis de la Conversación (c08)\n\n## 📊 Resultado: **NO VENTA**\n\n---\n\n## 🔍 Puntos Críticos Identificados\n\n### ❌ Error Grave de Credibilidad\nEl vendedor dice que el iPhone 15 Pro Max cuesta \"$100 más\" cuando la realidad es:\n- iPhone 15: $1,099\n- iPhone 15 Pro Max: $1,499\n- **Diferencia real: $400**\n\nEsto es un error matemático que destruye confianza inmediatamente con un cliente exigente.\n\n---\n\n### ❌ No Respondió a las Preguntas del Cliente (Turno 2)\nEl cliente hizo 4 preguntas claras antes de comprar:\n\n| Pregunta | Estado |\n|----------|--------|\n| Especificaciones técnicas completas (RAM, batería mAh, resistencia al agua) | ❌ NO RESPONDIDO |\n| Cobertura exacta de la garantía y centros autorizados | ❌ NO RESPONDIDO |\n| Política de devolución | ❌ NO RESPONDIDO |\n| Tiempos de envío y seguimiento | ❌ NO RESPONDIDO |\n\n**Un cliente que hace preguntas detalladas tiene INTENCIÓN DE COMPRA.** No responder = perder la venta.\n\n---\n\n### ⚠️ Información Incompleta del Catálogo\nEl catálogo no incluye RAM, batería mAh ni resistencia al agua. El vendedor debería haber sido honesto: *\"Te comento que con esas especificaciones técnicas precisas necesito consultar con nuestro equipo técnico, ¿puedes darme unos minutos?\"*\n\n---\n\n## ✅ Lo Que Se Hizo Bien\n\n- Respuesta rápida inicial\n- Ofreció una alternativa (up-sell al Pro Max)\n- Mencionó envío gratis y garantía (aunque superficialmente)\n\n---\n\n## 🎯 Acciones Correctivas Inmediatas\n\n1. **VERIFICAR LOS NÚMEROS** antes de enviar cualquier mensaje con precios. Un error matemático es impardonable en ventas.\n\n2. **SIEMPRE RESPONDER A LAS PREGUNTAS DEL CLIENTE.** Si no tenés la info, decilo y ofrecete a buscarla:\n   > *\"Voy a consultar las especificaciones técnicas completas con nuestro equipo y te respondo en 5 minutos\"*\n\n3. **No cerrar la conversación sin respuesta del cliente.** Turno 2 fue el momento crítico - ahí estaba la venta.\n\n4. **Para clientes exigentes:** Anticipate preguntas profundas y ten respuestas preparadas, o sé honesto sobre lo que necesitas verificar.\n\n---\n\n## 💡 Lección Principal\n**Esta venta se perdió por no responder a Turno 2.** El cliente mostró interés genuino con preguntas específicas. La falta de respuesta fue interpretada como desinterés o incompetencia.\n\n### c09 (indeciso)\n\n\n---\n\n## Análisis de la Conversación c09\n\n### 🟢 Puntos Fuertes\n\n**1. Comprensión del cliente: EXCELENTE** ✅\nEl vendedor identificó correctamente las necesidades clave: presupuesto limitado (~$800), interés en cámara y rendimiento para juegos, y el perfil indeciso que necesita guía pero sin presión.\n\n**2. Manejo de objeciones: MUY BUENO** ✅\n- **Objeción de precio:** Respondió inmediatamente con alternativas adecuadas (Xiaomi 14 a $599, Pixel 8 a $749)\n- **Indecisión/temor al arrepentimiento:** Ayudó al cliente a priorizar usando preguntas estructuradas (\"¿Qué valorás más: A o B?\")\n- **Duda sobre cámara Leica:** Explicó honestamente las diferencias reales entre ambos productos\n\n**3. Ofreció alternativas adecuadas: EXCELENTE** ✅\nAmbas opciones eran relevantes:\n- Xiaomi 14: mismo procesador que OnePlus 12, más barato, buena cámara\n- Pixel 8: mejor cámara pero menos almacenamiento y más caro\n\n**4. Empoderamiento del cliente:** ✅\nEl vendedor fue honesto sin presionar, permitiendo al cliente tomar su propia decisión. Esto generó confianza y el cliente lo reconoció al final.\n\n---\n\n### 🔴 Error Crítico Identificado\n\n**❌ Información incorrecta sobre ENVÍO GRATIS (no corregida)**\n\nEn Turno 2, el vendedor dijo:\n> *\"Ambos con envío gratis (más de $700 el Pixel)\"*\n\nEsto es **INCORRECTO**:\n| Producto | Precio | ¿Supera $700? | Envío Gratis |\n|----------|--------|---------------|--------------|\n| Xiaomi 14 | $599 | ❌ NO | ❌ NO tiene envío gratis |\n| Pixel 8 | $749 | ✅ SÍ | ✅ Tiene envío gratis |\n\n**El cliente notó este error al final:** *\"Envío gratis (porque supera los $700? O no?)\"*\n\nPero el vendedor **NUNCA lo corrigió ni aclaró**. Esto es grave porque:\n- Da información falsa sobre beneficios del producto\n- El cliente podría sentirse engañado después de la compra\n- Muestra falta de atención al detalle\n\n---\n\n### 🟡 Oportunidades Perdidas\n\n**1. No aprovechó venta cruzada:** ✅ Menciona fundas y audífonos como ejemplo, pero no ofreció venderlos realmente. Podría haber preguntado: *\"¿Querés agregarle una funda protectora por $XX?\"*\n\n**2. No mencionó colores disponibles:** El catálogo dice \"consultar\" - podría haber preguntado qué color le interesa para generar más engagement.\n\n---\n\n### 💡 Feedback Accionable\n\n1. **CORREGIR INMEDIATAMENTE el error de envío gratis.** Nunca dar información incorrecta y siempre verificar datos antes de confirmar una venta.\n\n2. **En la próxima, cuando mencione accesorios:** Pídale al cliente si quiere agregarlos al pedido. Ejemplo: *\"Por $49 te agrego una funda protectora que se adapta perfecto al Xiaomi 14. ¿Te interesa?\"*\n\n3. **Cerrar mejor la\n\n### c10 (apurado)\n\n\n# Feedback de Análisis de Ventas\n\n## 📊 Evaluación General: **NECESITA MEJORAS CRÍTICAS**\n\n---\n\n### ✅ Lo que hizo BIEN:\n\n1. **Información precisa del producto:** Respondió correctamente con el precio ($999), specs y stock (4 unidades) del Pixel 8 Pro según catálogo.\n\n2. **Incluyó garantía:** Mencionó la garantía de 12 meses, generando confianza.\n\n3. **Indicó disponibilidad:** Aclaró que estaba en stock, respondiendo a la pregunta inicial.\n\n---\n\n### ❌ ERRORES CRÍTICOS:\n\n#### 1. **Upsell desastroso y mal dirigido**\n> *\"Por solo $100 más te llevás el iPhone 15\"*\n\nEsto es un error grave por varias razones:\n- El cliente preguntó específicamente por Pixel 8 Pro, no está abierto a cambiar de producto\n- Upsellar a algo **más caro** sin conocer presupuesto es prematuro\n- No entendió que su cliente probablemente tiene un límite financiero\n\n#### 2. **No sondeó el presupuesto antes de ofrecer alternativas**\nEl vendedor perdió la oportunidad de preguntar:\n- *\"¿Tenés algún rango de precio en mente?\"*\n- *\"¿Qué características son prioritarias para vos?\"*\n\nEsto hubiera revelado el budget de $674 desde el principio.\n\n#### 3. **NO ofreció alternativas cuando el cliente dio su presupuesto** 🔴 **ERROR MAYOR**\n\nCuando el cliente dijo: *\"mi presupuesto es $674\"*, el vendedor DEBIÓ haber respondido inmediatamente con opciones del catálogo que SÍ estaban disponibles:\n\n| Opción | Precio | Diferencia con budget |\n|--------|--------|----------------------|\n| Motorola Edge 40 Pro | $649 | -$25 (¡dentro!) |\n| Samsung Galaxy A55 | $399 | -$275 (con margen) |\n| Google Pixel 8 | $749 | +$75 (negociable) |\n\n**El Motorola Edge 40 Pro a $649 era una alternativa perfecta:** Snapdragon 8 Gen 2, 256GB almacenamiento, pantalla grande 6.67\" —y dentro del presupuesto!\n\n---\n\n### 📝 FEEDBACK ACCIONABLE:\n\n1. **SIEMPRE sondea el budget antes de hacer recomendaciones agresivas.** Una simple pregunta puede ahorrar tiempo y ganar confianza.\n\n2. **Cuando un cliente indica que está sobre su presupuesto, ofrece alternativas INMEDIATAMENTE** usando el catálogo. Esto demuestra valor y conocimiento del producto.\n\n3. **No upselleas a productos más caros si no conoces el contexto.** El iPhone 15 a $1099 era irrelevante para este cliente desde el inicio.\n\n4. **Pregunta de rescate que debió usar:** *\"Entiendo, ¿te gustaría ver opciones dentro de tu presupuesto? Tenemos el Motorola Edge 40 Pro por $649 con specs similares o el Samsung A55 por $399 si querés ahorrar más.\"*\n\n---\n\n### 🎯 Resultado:\n**Venta perdida evitable.** El cliente tenía budget para comprar en esta tienda, pero el vendedor no ofreció opciones adecuadas.",
+  "conversations": [
+    {
+      "id": "c01",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 Busco iPhone 15 Pro Max. ¿Tienen stock? Y a cómo lo venden?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el iPhone 15 Pro Max disponible.\n\n**Precio: $1,499**\n\nQuedan solo **3 unidades**, así que si te interesa hay que moverse rápido 🏃‍♂️\n\nSpecs: 6.7\", A17 Pro, 256GB, cámara de 48MP y cuerpo en Titanio 💪\n\nGarantía oficial de 12 meses incluida ✅\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nAh, $1,499 está bastante sobre mi presupuesto 😅 No puedo estirarme más allá de $1,200 aprox.\n\nMe voy a buscar en otro lado por ahora. ¡Gracias de todas formas! 👋",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c02",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 ¿Tienen el OnePlus 12 disponible? Lo estaba mirando hace unos días pero quería consultarles precios antes de nada 😊",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos OnePlus 12 disponible.\n\n**Precio: $849**\n\nSpecs: 6.82\", Snapdragon 8 Gen 3, 256GB, cámara 50MP Hasselblad\n\nTienen solo **5 unidades** disponibles.\n\nTe llega con envío gratis (compras >$700) y garantía oficial de 12 meses 📱\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Wow! $849... 😅 la verdad es que estaba esperando algo más económico, mi presupuesto ronda los $300 máximo.\n\n¿Tienen alguna promoción o descuento? O tal vez un modelo anterior? Me encanta el OnePlus pero ese precio me queda difícil 🙃\n\nSi no tienen nada más accesible, lo voy a dejar para otra oportunidad entonces 😊 ¡Gracias por la info!",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c03",
+      "consumer_profile": "curioso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 ¿Cómo estás?\n\nVi que tenían el Motorola Edge 40 Pro en la página... quería preguntarles si lo tienen disponible y a cuánto venden? \n\nSolo estoy mirando por ahora, nada urgente 😅",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Todo bien por acá, gracias. ¡Y vos?\n\nSí, tenemos el **Motorola Edge 40 Pro** disponible. Tenemos 7 unidades en stock.\n\n**Precio: $649**\n\nSpecs:\n- Pantalla 6.67\"\n- Snapdragon 8 Gen 2\n- 256GB de almacenamiento\n- Cámara 50MP\n\nViene con garantía oficial de 12 meses, todo nuevo y en caja cerrada. ✨\n\nSi tu presupuesto alcanza, te recomiendo que mires el **OnePlus 12** por $849 (solo $200 más). Tiene Snapdragon 8 Gen 3 más potente y cámara Hasselblad. O si querés ir al tope, el Galaxy S24 Ultra está a $1,399 con esa cámara de 200MP.\n\nPero el Moto es una excelente opción por su precio 👍\n\n¿Querés que te reserve uno o seguís mirando opciones?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Jaja gracias por la info! 😅\n\nLa verdad que $649 está bastante lejos de mi presupuesto... andaba buscando algo más económico, rondando los $200-250 máximo. \n\n¿Tenés algún Motorola más accesible o alguna oferta? Si no, lo voy a pensar y vuelvo después 👍\n\n¡Gracias igualmente!",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c04",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! Busco un iPhone 15 Pro Max, ¿lo tienen disponible? Me interesa saber precio y si lo pueden enviar hoy.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos el iPhone 15 Pro Max disponible.\n\n**Precio: $1,499**\n\nSpecs: 6.7\", A17 Pro, 256GB, 48MP, Titanio\n\n✅ **Envío gratis** (compra >$700)\n✅ Garantía oficial de 12 meses\n\n⚠️ Quedan solo **3 unidades** en stock.\n\nSobre el envío hoy: Depende de tu zona y del courier. ¿Me podés decir tu código postal para chequear?\n\n¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nOk, entendí. Pero $1.499 excede mi presupuesto de $1.102... No puedo estirarme más allá de eso.\n\nGracias por la info rápida, pero no es para mí a ese precio.\n\nHasta luego!",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c05",
+      "consumer_profile": "decidido",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n<thinking>\nAnalizando la situación:\n\n1. **Rol**: Soy un cliente que quiere comprar rápido sin perder tiempo\n2. **Producto deseado**: Xiaomi 14\n3. **Presupuesto máximo**: $613\n4. **Estilo**: Amable pero directo, mensajes cortos como en WhatsApp real\n5. **Objetivo del primer mensaje**: Saludar brevemente y preguntar por el producto y precio\n\nEstrategia del mensaje inicial:\n- Saludo breve y cordial (amabilidad)\n- Preguntar directamente por el producto (Xiaomi 14) - ser directo\n- Solicitar precio inmediatamente - ir al grano\n- Mantenerlo corto y natural como un chat de WhatsApp real\n\nNo necesito incluir la línea COMPRA todavía porque es el primer contacto - solo estoy consultando disponibilidad y precio. La decisión de compra se tomará después de recibir respuesta del vendedor.\n</thinking>\n\nHola! ¿Tienen disponible el Xiaomi 14? ¿A cuánto lo venden?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n---\n\nHola! 👋 ¿Tienen disponible el Xiaomi 14? \n\n¿Me podrías decir el precio y si tienen stock?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n---\n\n¡Hola! 👋 \n\nGracias por responder. Sí, me interesa el **Xiaomi 14**.\n\n¿Me podrías decir:\n- El precio exacto?\n- Si tienen stock disponible ahora?\n\nQuedo atento para comprar rápido si está dentro de mi presupuesto. ¡Saludos!",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\n---\n\nHola! 👋 ¿Tienen disponible el Xiaomi 14? \n\n¿Me podrías decir el precio y si tienen stock? Quiero comprar rápido, no me complique 😊",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n<thinking>\nAnalizando la situación:\n\n1. **Rol**: Soy un cliente que quiere comprar rápido sin perder tiempo\n2. **Producto deseado**: Xiaomi 14\n3. **Presupuesto máximo**: $613\n4. **Estilo**: Amable pero directo, mensajes cortos como en WhatsApp real\n5. **Objetivo del primer mensaje**: Saludar brevemente y preguntar por el producto y precio\n\nEstrategia del mensaje inicial:\n- Saludo breve y cordial (amabilidad)\n- Preguntar directamente por el producto (Xiaomi 14) - ser directo\n- Solicitar precio inmediatamente - ir al grano\n- Mantenerlo corto y natural como un chat de WhatsApp real\n\nNo necesito incluir la línea COMPRA todavía porque es el primer contacto - solo estoy consultando disponibilidad y precio. La decisión de compra se tomará después de recibir respuesta del vendedor.\n</thinking>\n\nHola! ¿Tienen disponible el Xiaomi 14? ¿A cuánto lo venden?\"",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 ¿Tienen disponible el Xiaomi 14? \n\n¿Me podrías decir el precio y si tienen stock? Quiero comprar rápido, no me complique 😊",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n---\n\n¡Hola! 👋 ¿Tienen disponible el **Xiaomi 14**? \n\n¿Me podrías decir el precio y si tienen stock? Quiero comprar rápido, no me complique 😊",
+          "turn_number": 4
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 ¡Claro que sí, tenemos **Xiaomi 14** disponible! 📱\n\n✅ **Stock:** 10 unidades en caja cerrada\n💰 **Precio:** $599 USD\n🚚 **Envío:** $25 (total: **$624**)\n\n✨ Especs: 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP\n🛡️ Garantía oficial de 12 meses\n\n---\n\n**Upselling:** Si querés algo aún mejor por poco más, te recomiendo el **OnePlus 12**:\n- Por solo $250 más ($849 + envío = $874)\n- Ganás pantalla más grande (6.82\"), cámara Hasselblad y batería de larga duración\n\n¿Cuál te interesa? ¿Lo llevás?",
+          "turn_number": 4
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n---\n\n¡Hola! 👋 ¡Claro que sí, tenemos **Xiaomi 14** disponible! 📱\n\n✅ **Stock:** 10 unidades en caja cerrada  \n💰 **Precio:** $599 USD  \n🚚 **Envío:** $25 (total: **$624**)\n\n✨ Especs: 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP  \n🛡️ Garantía oficial de 12 meses\n\n---\n\n**Upselling:** Si querés algo aún mejor por poco más, te recomiendo el **OnePlus 12**:\n- Por solo $250 más ($849 + envío = $874)\n- Ganás pantalla más grande (6.82\"), cámara Hasselblad y batería de larga duración\n\n¿Cuál te interesa? ¿Lo llevás?",
+          "turn_number": 5
+        },
+        {
+          "role": "seller",
+          "content": "\n\n---\n\n¡Entendido! 👋\n\nEstoy listo como vendedor de **TechMobile**. \n\nEsperando mensajes de clientes por WhatsApp... 📱💬\n\nCuando recibas una consulta, respondé rápido, con amabilidad y ofrecé el producto con upselling si corresponde.\n\n¿Hay algún cliente esperando atención?",
+          "turn_number": 5
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n---\n\n¡Hola! 👋 ¡Claro que sí, tenemos **Xiaomi 14** disponible! 📱\n\n✅ **Stock:** 10 unidades en caja cerrada  \n💰 **Precio:** $599 USD  \n🚚 **Envío:** $25 (total: **$624**)\n\n✨ Especs: 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP  \n🛡️ Garantía oficial de 12 meses\n\n---\n\n**Upselling:** Si querés algo aún mejor por poco más, te recomiendo el **OnePlus 12**:\n- Por solo $250 más ($849 + envío = $874)\n- Ganás pantalla más grande (6.82\"), cámara Hasselblad y batería de larga duración\n\n¿Cuál te interesa? ¿Lo llevás?",
+          "turn_number": 6
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 ¡Claro que sí, tenemos **Xiaomi 14** disponible! 📱\n\n✅ **Stock:** 10 unidades en caja cerrada  \n💰 **Precio:** $599 USD  \n🚚 **Envío:** $25 (total: **$624**)\n\n✨ Especs: 6.36\", Snapdragon 8 Gen 3, 256GB, cámara Leica 50MP  \n🛡️ Garantía oficial de 12 meses\n\n---\n\n**Upselling:** Si querés algo aún mejor por poco más, te recomiendo el **OnePlus 12**:\n- Por solo $250 más ($849 + envío = $874)\n- Ganás pantalla más grande (6.82\"), cámara Hasselblad y batería de larga duración\n\n¿Cuál te interesa? ¿Lo llevás?",
+          "turn_number": 6
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n<analysis>\n\n**Análisis financiero:**\n- Precio del producto: $599 ✅ (dentro de presupuesto)\n- Total con envío: $624 ❌ (supera mi presupuesto máximo de $613)\n- Diferencia: $11 por encima de lo que puedo pagar\n\n**Evaluación:**\n- El Xiaomi 14 es el producto que quiero exactamente\n- El precio del celular ($599) sí está dentro de mi presupuesto\n- Pero el total con envío me supera en $11\n- No tengo margen para negociar (estoy muy cerca del límite)\n- El OnePlus 12 a $874 está completamente fuera de mis posibilidades\n\n**Decisión:**\nNo puedo comprar porque el total ($624) excede mi presupuesto máximo ($613). Aunque sea solo por $11, no tengo esa flexibilidad. Lo más honesto es decirle al vendedor que me pasa del presupuesto y despedirme amablemente.\n\n</analysis>\n\n---\n\nHola! Gracias por la respuesta rápida. 👍\n\nEl Xiaomi 14 está bien pero el total con envío ($624) me supera mi presupuesto máximo de $613. Me pasa en $11 y no tengo margen para ajustar.\n\nEntiendo que es poco, pero no puedo estirarme más. Lamentablemente no lo compro hoy.\n\n¡Gracias igual por la atención! 👋",
+          "turn_number": 7
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Xiaomi 14",
+        "price": 599.0
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c06",
+      "consumer_profile": "exigente",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n<thinking>\nEl usuario quiere que actúe como un cliente exigente en WhatsApp. Presupuesto máximo: $842. Producto de interés: Google Pixel 8. Debo iniciar la conversación preguntando por el producto.\n</thinking>\n\nHola, buenas tardes! 👋 Estaba buscando un **Google Pixel 8** y me gustaría saber si lo tienen disponible y a qué precio. También necesito ver algunas especificaciones antes de decidir. ¿Me podrías ayudar?",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\nHola, buenas tardes! 👋 Estaba buscando un **Google Pixel 8** y me gustaría saber si lo tienen disponible y a qué precio. También necesito ver algunas especificaciones antes de decidir. ¿Me podrías ayudar?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 ¡Perfecto! El **Google Pixel 8** está disponible en stock. Te paso la información técnica:\n\n📱 **Especificaciones:**\n- Pantalla: 6.2\" OLED, 120Hz\n- Procesador: Google Tensor G3\n- RAM: 8GB\n- Almacenamiento: 128GB (no expandible)\n- Cámaras traseras: Dual 50MP + 12MP ultra-wide\n- Cámara frontal: 10.5MP\n- Batería: 4575mAh con carga rápida y inalámbrica\n- Protección: IP68 (agua y polvo)\n- Sistema: Android 14, 7 años de actualizaciones garantizadas\n\n💰 **Precio:** $820\n\n✅ **Garantía:** 1 año oficial contra defectos de fábrica\n\n🚚 **Envío:** \n- Buenos Aires: 24/48hs (gratuito)\n- Interior: 48/72hs ($50 adicional)\n\n💳 **Formas de pago:** Efectivo, transferencia (-3%), tarjetas hasta 6 cuotas sin interés con bancos seleccionados.\n\n¿Querés que te mande fotos reales del producto o tenés alguna duda específica?",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c07",
+      "consumer_profile": "cazador_de_ofertas",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 Busco info sobre el Samsung Galaxy S24. ¿Me podés decir el precio? Acá vi que lo tienen más barato...",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos **Samsung Galaxy S24** disponible.\n\n**Precio: $949**\n\nSpecs: 6.2\", Snapdragon 8 Gen 3, 128GB, cámara 50MP\n\nSobre el precio: entendemos que hay opciones online, pero con nosotros tenés garantía oficial de 12 meses + envío gratis + stock inmediato para entregar ahora mismo. 📱\n\nTambién tenemos el **Samsung Galaxy S24 Ultra** por $1,399. Por solo $450 más te llevás pantalla de 6.8\", cámara de 200MP y S Pen incluido. Quedan solo 4 unidades del Ultra.\n\n¿Te interesa alguno? ¿Lo llevás?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos **Samsung Galaxy S24** disponible.\n\n**Precio: $949**\n\nSpecs: 6.2\", Snapdragon 8 Gen 3, 128GB, cámara 50MP\n\nSobre el precio: entendemos que hay opciones online, pero con nosotros tenés garantía oficial de 12 meses + envío gratis + stock inmediato para entregar ahora mismo. 📱\n\nTambién tenemos el **Samsung Galaxy S24 Ultra** por $1,399. Por solo $450 más te llevás pantalla de 6.8\", cámara de 200MP y S Pen incluido. Quedan solo 4 unidades del Ultra.\n\n¿Te interesa alguno? ¿Lo llevás?",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos **Samsung Galaxy S24** disponible.\n\n**Precio: $949**\n\nSpecs: 6.2\", Snapdragon 8 Gen 3, 128GB, cámara 50MP\n\nSobre el precio: entendemos que hay opciones online, pero con nosotros tenés garantía oficial de 12 meses + envío gratis + stock inmediato para entregar ahora mismo. 📱\n\nTambién tenemos el **Samsung Galaxy S24 Ultra** por $1,399. Por solo $450 más te llevás pantalla de 6.8\", cámara de 200MP y S Pen incluido. Quedan solo 4 unidades del Ultra.\n\n¿Te interesa alguno? ¿Lo llevás?",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! Entiendo lo que decís sobre la garantía y todo eso, pero $949 está bastante lejos de mi presupuesto 😅\n\nEn realidad busqué en otros lados y vi el mismo modelo rondando los $500-$520. ¿Qué me podés ofrecer? 🤔\n\n¿Tienen alguna promoción activa o descuento por pago con tarjeta/efectivo? Mi tope es alrededor de $498, pero si hay algo interesante lo considero.",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "\n\nEntiendo perfectamente tu situación 😊\n\nEl tema es que el **S24 a $949** ni con nuestro máximo descuento del 9% llegaría a tu presupuesto ($863 mínimo). Así que seré directo:\n\n---\n\n## 📱 Alternativa dentro de tu presupuesto:\n\n**Samsung Galaxy A55 - $399** ✅\n\nSpecs: 6.6\", Exynos 1480, 128GB, cámara 50MP\n\n- ✅ Dentro de tu tope de $498\n- ✅ Misma marca Samsung (ecosistema)\n- ✅ Pantalla más grande (6.6\" vs 6.2\")\n- ✅ Envío gratis (supera los $700... espera, no supera 😅) → envío sería +$25 = **$424 total**\n\nQuedan 12 unidades disponibles.\n\n---\n\nSi realmente querés el S24, la única forma es ajustar tu presupuesto a mínimo ~$863 (con 9% de descuento).\n\n¿Qué te parece el A55? ¿Lo llevás por $399 + $25 envío = **$424 total**?",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nEntiendo, pero en realidad yo quería específicamente el S24 😕 No me interesa cambiar a otro modelo.\n\nLa diferencia de precio es muy grande ($863 vs $498) y no puedo estirar tanto mi presupuesto.\n\nGracias por la atención, voy a buscar en otros lados si encuentro algo más cercano a lo que busco. ¡Saludos! 👋",
+          "turn_number": 4
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c08",
+      "consumer_profile": "exigente",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\n<analysis>\nAnalizando mi rol como cliente riguroso en WhatsApp:\n\n1. **Presupuesto**: $1,483 máximo\n2. **Producto de interés**: iPhone 15\n3. **Comportamiento**: Preguntar todo antes de comprometerme\n4. **Estilo**: Mensajes cortos, naturales, como chat real\n5. **Objetivo inicial**: Saludar y preguntar disponibilidad/precio del producto\n\nComo primer mensaje, debo ser educado pero directo. Necesito saber si tienen el iPhone 15 disponible y a qué precio, ya que tengo un presupuesto límite definido. No voy a hacer todas las preguntas de golpe - eso sería antinatural en WhatsApp. Voy a empezar con lo básico y luego profundizar según las respuestas del vendedor.\n</analysis>\n\n---\n\nHola! Buenas tardes 👋\n\nTengo una consulta sobre el iPhone 15. ¿Lo tienen disponible y a cuánto lo venden? \n\nMi presupuesto máximo es $1,483",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Buenas tardes, ¿cómo estás?\n\nSí, tenemos **iPhone 15** disponible.\n\n**Precio: $1,099**\n\nSpecs: 6.1\", A16 Bionic, 128GB, cámara 48MP\nStock: 5 unidades 📱\n\n---\n\nTe cuento que con tu presupuesto también podrías considerar el **iPhone 15 Pro Max** por solo $100 más ($1,499). La diferencia es notable: pantalla de 6.7\", procesador A17 Pro más potente, 256GB de almacenamiento y cuerpo en titanio.\n\n---\n\nAmbos con envío gratis 🚚 + garantía oficial de 12 meses ✅\n\n¿Qué te parece? ¿Lo llevás o te animás a subir al Pro Max?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! Gracias por la respuesta rápida 🙏\n\nEl precio del iPhone 15 está bien dentro de mi presupuesto. Pero antes de decidir necesito saber un poco más:\n\n1️⃣ ¿Me podrías dar las especificaciones técnicas completas? (RAM, batería mAh, resistencia al agua, etc.)\n\n2️⃣ Sobre la garantía de 12 meses:\n   - ¿Qué cubre exactamente?\n   - ¿Es garantía oficial Apple o de la tienda?\n   - ¿Hay centros de servicio autorizados cerca?\n\n3️⃣ Política de devolución:\n   - ¿Hasta cuándo puedo devolver si no me convence?\n   - ¿En qué condiciones aceptan devoluciones?\n\n4️⃣ Envío:\n   - ¿A tu ciudad cuánto tardaría en llegar?\n   - ¿Tienen seguimiento del paquete?\n\nQuedo atento a tus respuestas para tomar la decisión 👍",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    },
+    {
+      "id": "c09",
+      "consumer_profile": "indeciso",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! 👋 \n\n¿Me podrían ayudar? Estoy buscando comprar un celular nuevo pero la verdad ando un poco perdido con tantas opciones...\n\nVi que venden el OnePlus 12, ¿lo tienen disponible? Me gustaría saber más antes de decidir.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 ¡Claro que sí, te ayudo con gusto!\n\nSí, tenemos el **OnePlus 12** disponible.\n\n**Precio: $849**\n\nSpecs: 6.82\", Snapdragon 8 Gen 3, 256GB, 50MP Hasselblad\n\nComo es más de $700, te sale con envío gratis 🚚\n\n---\n\nPara recomendarte mejor, ¿cuál es tu presupuesto máximo? Y ¿qué valorás más: cámara, batería o rendimiento?\n\nAsí te guío a la opción ideal para vos. 😊",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\n¡Hola! Oh no... $849 está un poquito fuera de mi alcance 😅. Mi presupuesto máximo ronda los $793, pero puedo estirar un poquito si vale la pena.\n\nMe encanta el OnePlus 12 porque lo vi en reviews y la cámara se ve increíble 📸. Pero si tienen algo similar pero más barato, me gustaría saber... ¿tienen otro modelo de OnePlus o quizás una promoción?",
+          "turn_number": 2
+        },
+        {
+          "role": "seller",
+          "content": "\n\nEntiendo perfectamente! 📱\n\nCon tu presupuesto de ~$800, el OnePlus 12 a $849 queda un poco arriba... pero tengo **excelentes alternativas** para vos:\n\n---\n\n**🏆 MI RECOMENDACIÓN: Xiaomi 14 - $599**\n\n¡Es una joya! 🌟\n- Mismo procesador que el OnePlus 12 (Snapdragon 8 Gen 3) ⚡\n- **Cámara Leica** (igual concepto que Hasselblad de OnePlus, muy premiada) 📸\n- 256GB de almacenamiento\n- $200 más barato\n\n---\n\n**Otra opción TOP: Google Pixel 8 - $749**\n\nEl rey de las cámaras en fotos 🏆\n- Tensor G3, 128GB, 50MP\n- Procesamiento fotográfico increíble\n\n---\n\nAmbos con **envío gratis** (más de $700 el Pixel) y garantía 12 meses ✅\n\n¿Qué te parece? ¿El Xiaomi 14 o probamos a estirar un poco por el OnePlus 12 con una promoción especial? 😊",
+          "turn_number": 2
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nUf, ahora tengo más dudas 😅. Los dos suenan muy bien pero me cuesta elegir...\n\nEl Xiaomi 14 queda súper dentro de presupuesto ($599) y tiene el mismo procesador que el OnePlus 12... Eso es importante para mí porque quiero que ruede bien los juegos 🎮. Y la cámara Leica se ve prolija también.\n\nPero el Pixel 8 a $749 dicen que es EL REY de las cámaras en fotos... 📷 Y yo quiero que saque buenas fotos sobre todo. Pero tiene menos almacenamiento (128GB vs 256GB del Xiaomi).\n\n¿Vos qué me recomendarías? ¿Me conviene ir por el Xiaomi y ahorrar $200 para quizás comprarle una funda o un case de audífonos? O estiro hasta el Pixel que es famoso por las fotos... \n\nTengo miedo de arrepentirme si elijo mal 😅",
+          "turn_number": 3
+        },
+        {
+          "role": "seller",
+          "content": "\n\nEntiendo perfectamente tu dilema 😊 Es difícil elegir entre dos opciones tan buenas...\n\n---\n\n**Te voy a ser 100% honesto:**\n\nSi me dijeras que quieres **JUEGOS + fotos buenas + ahorrar dinero**, te diría:\n\n👉 **Xiaomi 14 por $599** es tu mejor compra 🏆\n\n¿Por qué?\n- Mismo procesador que el OnePlus 12 → los juegos vuelan ⚡\n- Cámara Leica muy buena (no es broma, leica es lo suyo) 📸\n- **Ahorrás $200** para funda + audífonos o lo qué quieras 💰\n\n---\n\nPero si tu PRIORIDAD NÚMERO 1 son las fotos y podés estirar...\n\n👉 El Pixel 8 a $749 tiene el mejor procesamiento fotográfico del mercado 🏆\n\n---\n\n**Mi pregunta para vos:** ¿Qué valorás más?\n\n- A) Rendimiento en juegos + ahorrar $200 → Xiaomi 14 ✅\n- B) Las MEJORES fotos posibles y podés pagar la diferencia → Pixel 8 ✅\n\n¿Cuál te resuena más? 😊",
+          "turn_number": 3
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nUff, es difícil 😅... Voy a ser honesto.\n\nLa verdad es que me gustaría tener lo mejor de los dos mundos: buena cámara Y buen rendimiento para juegos 🎮📸. Pero sé que no existe...\n\nEl Xiaomi 14 me atrae porque:\n- $599 queda MUY dentro de mi presupuesto (ahorro $200) 💰\n- Tiene el mismo chip del OnePlus 12 → los juegos van genial ⚡\n- 256GB es mucho más que los 128GB del Pixel\n\nPERO... 🤔\n\nLa cámara del Pixel me da miedo no tenerla. Si en el futuro quiero fotos increíbles y tengo el Xiaomi... ¿me voy a arrepentir? 😰\n\n¿Me podrías decir: si yo compro el Xiaomi 14, ¿la cámara Leica es BUENA? Tipo, ¿vale la pena o son solo marketing? Porque si la cámara está bien bien, me iría por ahí... Y si no, tendría que estirar hasta el Pixel.\n\nNecesito saber eso para decidir 😅",
+          "turn_number": 4
+        },
+        {
+          "role": "seller",
+          "content": "\n\n---\n\n**Te voy a ser MUY honesto** 🔥\n\nSegún el catálogo, ambos tienen **50MP**:\n\n| Xiaomi 14 | Pixel 8 |\n|---|---|\n| 50MP Leica | 50MP puro Google |\n\n---\n\n**La diferencia REAL es:**\n\n📸 **Xiaomi 14 (Leica):**\n- Colores más vivos, estilo \"premium\" 🎨\n- Muy buena en luz natural y retratos\n- Leica = calidad óptica real (no es solo marketing) ✅\n- Excelente para redes sociales\n\n---\n\n🏆 **Pixel 8:**\n- Mejor procesamiento software ⚙️\n- Fotos nocturnas increíbles ✨\n- HDR automático superior\n- Si querés el \"reino\" de fotos: este gana 📷\n\n---\n\n**Mi consejo honesto:**\n\nSi querés **buena cámara + juegos + ahorrar $200**:\n\n👉 **Xiaomi 14 por $599** es una compra INCREÍBLE 🏆\n\nLa cámara Leica SÍ vale la pena. No vas a arrepentirte de tener fotos buenas Y el mejor rendimiento por tu dinero 💪\n\n---\n\nSolo elegí Pixel si:\n- Las fotos son TU prioridad absoluta (más que los juegos)\n- Podés estirar sin problemas hasta $749\n\n¿Qué decís? ¿Te animás con el Xiaomi 14? 😊",
+          "turn_number": 4
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nUff, mirá... Vos me ayudaste mucho hoy 🙏. Me explicaste las cosas claras y no me sentí presionado para comprar algo que no quería. Eso es importante para mí.\n\nY la verdad es que el Xiaomi 14 tiene sentido: $599 queda súper dentro de mi presupuesto, tengo el mismo chip del OnePlus 12 (que tanto quería), y si la cámara Leica es buena como decís... ¿por qué no? 🤷‍♂️\n\nAhorrar esos $200 también me permite quizás comprarle una funda bonita o lo que sea después. Y si en el futuro quiero algo con mejor cámara, ya tendré experiencia con el Xiaomi para saber qué buscar 😅\n\n**Sí, me voy por el Xiaomi 14.** ¿Me podrías confirmar:\n- Precio final: $599 ✅\n- Envío gratis (porque supera los $700? O no?) 🚚\n- Garantía de 12 meses como dijiste ✅\n\n¿Cómo procedemos para pagar y que me lo envíen? 📦\n\nCOMPRA: {\"producto\": \"Xiaomi 14\", \"precio\": 599}",
+          "turn_number": 5
+        }
+      ],
+      "outcome": "sale",
+      "sale_details": {
+        "product": "Xiaomi 14",
+        "price": 599
+      },
+      "status": "finished"
+    },
+    {
+      "id": "c10",
+      "consumer_profile": "apurado",
+      "turns": [
+        {
+          "role": "consumer",
+          "content": "\n\nHola! ¿Tienen Google Pixel 8 Pro disponible? Me interesa saber el precio.",
+          "turn_number": 1
+        },
+        {
+          "role": "seller",
+          "content": "\n\n¡Hola! 👋 Sí, tenemos **Google Pixel 8 Pro** disponible.\n\n**Precio: $999**\n\nSpecs: 6.7\", Tensor G3, 128GB, 50MP, sensor de temperatura\n\nQuedan 4 unidades en stock. ✅\n\nPor solo $100 más te llevás el **iPhone 15**, que tiene pantalla 6.1\" y chip A16 Bionic —muy rápido y con gran cámara también—. ¿Te gustaría verlo? 🤔\n\nTodos los celulares tienen garantía oficial de 12 meses y vienen nuevos en caja cerrada.\n\n¿Lo llevás o querés saber más algo?",
+          "turn_number": 1
+        },
+        {
+          "role": "consumer",
+          "content": "\n\nEntiendo, pero $999 supera mi presupuesto de $674. No puedo estirar tanto.\n\nGracias por la atención, buscaré en otro lado. ¡Saludos! 👋",
+          "turn_number": 2
+        }
+      ],
+      "outcome": "no_sale",
+      "sale_details": null,
+      "status": "finished"
+    }
+  ],
+  "total_tokens": 133359
+}

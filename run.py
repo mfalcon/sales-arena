@@ -123,6 +123,9 @@ def cmd_simulate(args):
     exp_dir = EXPERIMENTS / result.experiment_id
     _write_results(exp_dir, result, seller_prompt)
 
+    # Append to results.tsv
+    _append_to_tsv(result)
+
     # Print summary
     print(f"\n{'='*50}")
     print(f"RESULTADOS")
@@ -176,6 +179,35 @@ def _read_config(path: Path) -> dict:
         sys.exit(1)
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def _append_to_tsv(result):
+    """Append experiment result as a row to results.tsv."""
+    tsv_path = EXPERIMENTS / "results.tsv"
+    header = "timestamp\tmodel\tprofit\trevenue\tvalid_sales\tinvalid_sales\tno_sales\ttotal\tviolations\ttokens\tprompt\n"
+
+    if not tsv_path.exists():
+        tsv_path.write_text(header, encoding="utf-8")
+
+    # Escape prompt: replace newlines and tabs
+    prompt_oneline = result.seller_prompt.replace("\n", "\\n").replace("\t", " ")
+
+    row = (
+        f"{result.timestamp}\t"
+        f"{result.model}\t"
+        f"{result.total_profit:.2f}\t"
+        f"{result.total_revenue:.2f}\t"
+        f"{result.valid_sales}\t"
+        f"{result.invalid_sales}\t"
+        f"{result.no_sales}\t"
+        f"{result.total_conversations}\t"
+        f"{len(result.violations)}\t"
+        f"{result.total_tokens}\t"
+        f"{prompt_oneline}\n"
+    )
+
+    with open(tsv_path, "a", encoding="utf-8") as f:
+        f.write(row)
 
 
 def _write_results(exp_dir: Path, result, seller_prompt: str):

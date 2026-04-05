@@ -1,9 +1,9 @@
-"""Post-simulation evaluation: judge and analyst."""
+"""Post-simulation evaluation: constraint judge."""
 
 from datetime import datetime
 
 from arena.llm import LLMClient, extract_json
-from arena.prompts import build_analyst_messages, build_judge_messages
+from arena.prompts import build_judge_messages
 from arena.types import Conversation, ExperimentResult, Turn, Violation
 
 
@@ -47,7 +47,6 @@ def evaluate_experiment(
     no_sales = 0
     total_profit = 0.0
     total_revenue = 0.0
-    analyses = []
 
     for conv in conversations:
         # --- Judge ---
@@ -103,17 +102,12 @@ def evaluate_experiment(
                     )
                 )
 
-        # --- Analyst ---
-        analysis = _run_analyst(llm, conv, catalog_text)
-        analyses.append(f"### {conv.id} ({conv.consumer_profile})\n{analysis}")
-
+    judge_warning = ""
     if not judge_reliable:
-        combined_analysis = (
+        judge_warning = (
             "**ADVERTENCIA: El juez de constraints no pasó los casos de control. "
-            "Las evaluaciones de violaciones pueden no ser confiables.**\n\n"
-        ) + "\n\n".join(analyses)
-    else:
-        combined_analysis = "\n\n".join(analyses)
+            "Las evaluaciones de violaciones pueden no ser confiables.**"
+        )
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -130,7 +124,7 @@ def evaluate_experiment(
         no_sales=no_sales,
         total_conversations=len(conversations),
         violations=violations,
-        analysis=combined_analysis,
+        analysis=judge_warning,
         conversations=conversations,
         total_tokens=llm.usage.total,
     )
@@ -156,16 +150,6 @@ def _run_judge(
         "bad_treatment_description": parsed.get("bad_treatment_description", ""),
         "valid_sale": parsed.get("valid_sale", True),
     }
-
-
-def _run_analyst(
-    llm: LLMClient,
-    conversation: Conversation,
-    catalog_text: str,
-) -> str:
-    """Run the analyst on a single conversation. Returns free-form analysis text."""
-    messages = build_analyst_messages(conversation, catalog_text)
-    return llm.send(messages)
 
 
 def validate_judge(
