@@ -1,7 +1,9 @@
 """Round-robin simulation engine for Sales Arena."""
 
+import json
 import random
 import re
+from datetime import datetime, timezone
 from typing import Optional
 
 from arena.llm import LLMClient, extract_json
@@ -27,6 +29,7 @@ def run_simulation(
     product_list: Optional[list[str]] = None,
     price_map: Optional[dict[str, float]] = None,
     on_turn: Optional[callable] = None,
+    on_event: Optional[callable] = None,
     consumer_llm: Optional[LLMClient] = None,
 ) -> list[Conversation]:
     """Run a full simulation with pseudo-parallel conversations.
@@ -43,6 +46,11 @@ def run_simulation(
         product_list: List of product names for consumer interest generation.
         price_map: Product -> price mapping for budget calculation.
         on_turn: Optional callback(turn_round, conversation_id, role, content) for logging.
+        on_event: Optional callback(event_dict) for structured logging. Events:
+            {"type": "turn", "round": N, "conv_id": "cXX", "role": "seller|consumer", "content": "...", "seq": N}
+            {"type": "stock_update", "product": "...", "before": N, "after": N, "conv_id": "cXX", "seq": N}
+            {"type": "status_change", "conv_id": "cXX", "outcome": "sale|no_sale|timeout", "details": {...}, "seq": N}
+            {"type": "consumer_intent", "conv_id": "cXX", "status": "browsing|purchase|no_purchase", "raw_json": {...}, "seq": N}
         consumer_llm: Optional separate LLM client for consumers (defaults to same as seller).
 
     Returns:
@@ -51,6 +59,14 @@ def run_simulation(
     c_llm = consumer_llm or llm
     profiles = consumer_profiles or CONSUMER_PROFILES
     profile_names = list(profiles.keys())
+    _seq = [0]  # mutable counter for event sequencing
+
+    def _emit(event: dict):
+        _seq[0] += 1
+        event["seq"] = _seq[0]
+        event["timestamp"] = datetime.now(timezone.utc).isoformat()
+        if on_event:
+            on_event(event)
 
     # Create consumers with random profiles
     conversations: list[Conversation] = []
@@ -67,7 +83,7 @@ def run_simulation(
         budget = _calculate_budget(profile_name, interest, profiles, price_map)
 
         # Build consumer system prompt
-        sys_prompt = build_consumer_system_prompt(profile_name, budget, interest)
+        sys_prompt = build_consumer_system_prompt(profile_name, budget, interest, product_list)
         consumer_system_prompts[conv_id] = sys_prompt
 
         # Generate opening message from consumer
@@ -80,17 +96,23 @@ def run_simulation(
         )
         conversations.append(conv)
 
+        _emit({"type": "turn", "round": 1, "conv_id": conv_id, "role": "consumer",
+               "content": opening, "stock": stock.snapshot()})
         if on_turn:
             on_turn(1, conv_id, "consumer", opening)
 
-    # Round-robin turns
+    # Round-robin turns — one full exchange (seller→consumer) per conversation,
+    # in random order each round, so stock is always current.
     for turn_round in range(1, max_turns + 1):
         active = [c for c in conversations if c.status == "active"]
         if not active:
             break
 
-        # Seller responds to all active conversations
+        # Shuffle order each round
+        random.shuffle(active)
+
         for conv in active:
+            # --- Seller responds ---
             other_convs = [c for c in conversations if c.id != conv.id]
 
             seller_messages = build_seller_context(
@@ -102,79 +124,92 @@ def run_simulation(
                 stock_text=stock.get_stock_text(),
             )
 
-            seller_response = llm.send(seller_messages)
-            if not seller_response or not seller_response.strip():
-                # Retry with simplified context (just last consumer message)
+            try:
+                raw_seller = llm.send(seller_messages, json_mode=True)
+            except Exception:
+                raw_seller = ""
+            if not raw_seller or not raw_seller.strip():
                 last_msg = conv.turns[-1].content if conv.turns else ""
                 simple_msgs = [
                     {"role": "system", "content": seller_prompt},
                     {"role": "user", "content": last_msg},
                 ]
-                seller_response = llm.send(simple_msgs)
-            if not seller_response or not seller_response.strip():
-                seller_response = "¡Hola! Contame qué estás buscando y te ayudo."
+                try:
+                    raw_seller = llm.send(simple_msgs, json_mode=True)
+                except Exception:
+                    raw_seller = ""
+
+            seller_response = _parse_seller_response(raw_seller)
             conv.turns.append(
                 Turn(role="seller", content=seller_response, turn_number=turn_round)
             )
-
+            _emit({"type": "turn", "round": turn_round, "conv_id": conv.id, "role": "seller",
+                   "content": seller_response, "stock": stock.snapshot()})
             if on_turn:
                 on_turn(turn_round, conv.id, "seller", seller_response)
 
-        # Consumer responds to all active conversations
-        active = [c for c in conversations if c.status == "active"]
-        if not active:
-            break
-
-        # Don't generate consumer response on the last turn round
-        # (seller already responded, that's enough)
-        if turn_round >= max_turns:
-            for conv in active:
+            # --- Consumer responds (skip on last round) ---
+            if turn_round >= max_turns:
                 conv.outcome = "timeout"
                 conv.status = "finished"
-            break
+                continue
 
-        for conv in active:
             consumer_messages = build_consumer_messages(
                 system_prompt=consumer_system_prompts[conv.id],
                 turns=conv.turns,
             )
 
-            consumer_response = c_llm.send(consumer_messages)
-            if not consumer_response or not consumer_response.strip():
-                consumer_response = "No gracias, voy a seguir mirando."
+            try:
+                raw_response = c_llm.send(consumer_messages, json_mode=True)
+            except Exception:
+                raw_response = ""
+
+            parsed = _parse_consumer_response(raw_response)
+            message = parsed.get("message", "").strip()
+            status = parsed.get("status", "browsing")
+
+            if not message:
+                message = "No thanks, I'll keep looking around."
+                status = "no_purchase"
+
             conv.turns.append(
                 Turn(
                     role="consumer",
-                    content=consumer_response,
+                    content=message,
                     turn_number=turn_round + 1,
                 )
             )
 
+            _emit({"type": "turn", "round": turn_round + 1, "conv_id": conv.id, "role": "consumer",
+                   "content": message, "stock": stock.snapshot()})
+            _emit({"type": "consumer_intent", "conv_id": conv.id, "status": status,
+                   "raw_json": parsed})
             if on_turn:
-                on_turn(turn_round + 1, conv.id, "consumer", consumer_response)
+                on_turn(turn_round + 1, conv.id, "consumer", message)
 
-            # Check for purchase
-            purchase = detect_purchase(consumer_response)
-            if purchase:
-                product = purchase["producto"]
-                price = purchase.get("precio", 0) or 0
-                # If product is from natural language detection, try to find it from conversation
-                if product == "_from_context":
-                    product = _extract_product_from_conversation(conv, stock)
-                if stock.sell(product):
+            # --- Process outcome immediately (stock updates before next conversation) ---
+            if status == "purchase":
+                product = parsed.get("product", "")
+                price = parsed.get("price", 0) or 0
+                stock_before = stock.get_stock(product)
+                sold = product and stock.sell(product)
+                if sold:
+                    stock_after = stock.get_stock(product)
                     conv.outcome = "sale"
                     conv.sale_details = {
                         "product": product,
-                        "price": price,
+                        "price": float(price) if price else 0,
                     }
                     conv.status = "finished"
-                else:
-                    # Out of stock — inject a note, conversation continues
-                    # The seller will see updated stock on next turn
-                    pass
-            elif detect_no_buy(consumer_response):
+                    _emit({"type": "stock_update", "product": product,
+                           "before": stock_before, "after": stock_after, "conv_id": conv.id})
+                    _emit({"type": "status_change", "conv_id": conv.id, "outcome": "sale",
+                           "details": conv.sale_details})
+            elif status == "no_purchase":
                 conv.outcome = "no_sale"
                 conv.status = "finished"
+                _emit({"type": "status_change", "conv_id": conv.id, "outcome": "no_sale",
+                       "details": {}})
 
     # Mark any remaining active conversations as timeout
     for conv in conversations:
@@ -185,88 +220,58 @@ def run_simulation(
     return conversations
 
 
-def detect_purchase(text: str) -> Optional[dict]:
-    """Detect if a consumer message contains a purchase signal.
+def _parse_seller_response(raw: str) -> str:
+    """Parse structured JSON response from seller LLM. Returns the message string."""
+    if not raw or not raw.strip():
+        return "Hi! Tell me what you're looking for and I'll help you out."
 
-    Looks for the COMPRA marker, purchase-related JSON, or natural purchase phrases.
-    Returns {"producto": ..., "precio": ...} or None.
+    try:
+        parsed = json.loads(raw.strip())
+        if isinstance(parsed, dict) and "message" in parsed:
+            return parsed["message"].strip()
+    except json.JSONDecodeError:
+        pass
+
+    parsed = extract_json(raw)
+    if parsed and isinstance(parsed, dict) and "message" in parsed:
+        return parsed["message"].strip()
+
+    # Last resort: strip reasoning tags and return raw text
+    from arena.llm import _strip_reasoning_tags
+    return _strip_reasoning_tags(raw).strip() or "Hi! Tell me what you're looking for and I'll help you out."
+
+
+def _parse_consumer_response(raw: str) -> dict:
+    """Parse structured JSON response from consumer LLM.
+
+    Expected format: {"message": "...", "status": "browsing|purchase|no_purchase", ...}
+    Falls back gracefully if the LLM doesn't return valid JSON.
     """
-    # Look for COMPRA: {...} marker
-    compra_match = re.search(
-        r"COMPRA:\s*(\{.*?\})", text, re.IGNORECASE | re.DOTALL
-    )
-    if compra_match:
-        parsed = extract_json(compra_match.group(1))
-        if parsed and "producto" in parsed:
+    if not raw or not raw.strip():
+        return {"message": "", "status": "no_purchase"}
+
+    # Try direct json.loads first (ideal path)
+    try:
+        parsed = json.loads(raw.strip())
+        if isinstance(parsed, dict) and "message" in parsed:
             return parsed
+    except json.JSONDecodeError:
+        pass
 
-    # Look for JSON with "COMPRA" key anywhere in text
-    parsed = extract_json(text)
-    if parsed:
-        if "COMPRA" in parsed and isinstance(parsed["COMPRA"], dict):
-            return parsed["COMPRA"]
-        if "producto" in parsed and "precio" in parsed:
-            return parsed
+    # Fallback: use extract_json for models that wrap in markdown etc.
+    parsed = extract_json(raw)
+    if parsed and isinstance(parsed, dict) and "message" in parsed:
+        return parsed
 
-    # Natural language purchase detection
-    purchase_phrases = [
-        r"lo llevo",
-        r"me lo llevo",
-        r"lo compro",
-        r"lo quiero",
-        r"dale.*compro",
-        r"cerramos",
-        r"hacemos.*el trato",
-        r"te lo compro",
-        r"confirmó.*compra",
-        r"quiero comprarlo",
-    ]
-    text_lower = text.lower()
-    if any(re.search(p, text_lower) for p in purchase_phrases):
-        # Try to extract product and price from the text
-        price_match = re.search(r"\$\s*([\d.,]+)", text)
-        price = None
-        if price_match:
-            try:
-                price = float(price_match.group(1).replace(",", ""))
-            except ValueError:
-                pass
-        return {"producto": "_from_context", "precio": price}
-
-    return None
-
-
-def detect_no_buy(text: str) -> bool:
-    """Detect if a consumer is leaving without buying."""
-    farewell_patterns = [
-        r"voy a pensar",
-        r"lo pienso",
-        r"después vuelvo",
-        r"después te aviso",
-        r"no gracias",
-        r"no, gracias",
-        r"no me interesa",
-        r"muy caro",
-        r"no puedo",
-        r"chau",
-        r"hasta luego",
-        r"nos vemos",
-        r"gracias por la info",
-        r"voy a seguir buscando",
-        r"voy a buscar",
-        r"no me convence",
-        r"paso",
-        r"mejor no",
-    ]
-    text_lower = text.lower()
-    return any(re.search(p, text_lower) for p in farewell_patterns)
+    # Last resort: treat raw text as a plain message
+    return {"message": raw.strip(), "status": "browsing"}
 
 
 def _pick_interest(product_list: Optional[list[str]]) -> str:
     """Pick a product or category the consumer is interested in."""
     if product_list:
         return random.choice(product_list)
-    return "productos disponibles"
+    return "available products"
 
 
 def _calculate_budget(
@@ -295,6 +300,23 @@ def _calculate_budget(
     return round(budget, 2)
 
 
+def _find_product_by_price(price: float, price_map: dict[str, float]) -> Optional[str]:
+    """Find the product whose list price best matches the given sale price.
+
+    Returns the product if the price is within 15% below list price (valid discount range).
+    """
+    best = None
+    best_diff = float("inf")
+    for product, list_price in price_map.items():
+        # Price should be between 85% and 100% of list price
+        if list_price * 0.85 <= price <= list_price * 1.05:
+            diff = abs(price - list_price)
+            if diff < best_diff:
+                best_diff = diff
+                best = product
+    return best
+
+
 def _extract_product_from_conversation(
     conv: Conversation, stock: StockTracker
 ) -> str:
@@ -315,12 +337,13 @@ def _generate_opening(llm: LLMClient, consumer_system_prompt: str) -> str:
         {
             "role": "user",
             "content": (
-                "Escribí tu primer mensaje al vendedor. "
-                "Recordá que vos sos el cliente y estás iniciando el chat."
+                "Write your first message to the seller. "
+                "Remember that you are the customer and you are starting the chat."
             ),
         },
     ]
-    response = llm.send(messages)
-    if not response or not response.strip():
-        return "Hola, ¿qué productos tienen disponibles?"
-    return response
+    raw = llm.send(messages, json_mode=True)
+    if not raw or not raw.strip():
+        return "Hi, what products do you have available?"
+    parsed = _parse_consumer_response(raw)
+    return parsed.get("message", "Hi, what products do you have available?")

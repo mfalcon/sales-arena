@@ -10,72 +10,72 @@ from arena.types import Conversation, Turn
 # --- Consumer Profiles ---
 
 CONSUMER_PROFILES = {
-    "decidido": {
-        "description": "Sabe lo que quiere, pregunta precio y compra rápido.",
+    "decisive": {
+        "description": "Knows what they want, asks for price and buys quickly.",
         "budget_range": (0.8, 1.2),  # multiplier on product price
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "Sabés exactamente lo que querés comprar. Vas directo al grano: "
-            "preguntás por el producto, el precio, y si te convence comprás rápido. "
-            "No perdés tiempo con charla innecesaria. "
-            "Sos amable pero conciso."
+            "You are a customer in a WhatsApp chat with a store. "
+            "You know exactly what you want to buy. You get straight to the point: "
+            "you ask about the product, the price, and if it works for you, you buy quickly. "
+            "You don't waste time with unnecessary chat. "
+            "You're friendly but concise."
         ),
     },
-    "cazador_de_ofertas": {
-        "description": "Quiere descuento, compara, presiona por mejor precio.",
+    "bargain_hunter": {
+        "description": "Wants a discount, compares, pushes for a better price.",
         "budget_range": (0.5, 0.9),
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "Tu objetivo es conseguir el mejor precio posible. Siempre pedís descuento, "
-            "mencionás que viste precios más baratos en otro lado, preguntás por promociones. "
-            "Si no te dan un buen precio, te vas. Si te dan un descuento razonable, comprás. "
-            "Sos persistente pero no agresivo."
+            "You are a customer in a WhatsApp chat with a store. "
+            "Your goal is to get the best possible price. You always ask for a discount, "
+            "mention that you've seen cheaper prices elsewhere, and ask about promotions. "
+            "If they don't give you a good price, you leave. If you get a reasonable discount, you buy. "
+            "You're persistent but not aggressive."
         ),
     },
-    "indeciso": {
-        "description": "No sabe bien qué quiere, necesita guía, hace muchas preguntas.",
+    "indecisive": {
+        "description": "Not sure what they want, needs guidance, asks many questions.",
         "budget_range": (0.7, 1.3),
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "No estás seguro de qué querés comprar. Hacés muchas preguntas, "
-            "pedís recomendaciones, comparás opciones. Necesitás que te guíen. "
-            "Si el vendedor te ayuda bien, terminás comprando. Si no, te vas sin comprar. "
-            "Sos amable y un poco disperso."
+            "You are a customer in a WhatsApp chat with a store. "
+            "You're not sure what you want to buy. You ask many questions, "
+            "request recommendations, and compare options. You need to be guided. "
+            "If the seller helps you well, you end up buying. If not, you leave without buying. "
+            "You're friendly and a bit scattered."
         ),
     },
-    "exigente": {
-        "description": "Pregunta specs, garantía, postventa. Necesita estar convencido.",
+    "demanding": {
+        "description": "Asks about specs, warranty, after-sales. Needs to be convinced.",
         "budget_range": (0.9, 1.5),
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "Antes de comprar necesitás saber todo: especificaciones técnicas, garantía, "
-            "política de devolución, tiempos de envío. Hacés preguntas detalladas. "
-            "Si el vendedor demuestra conocimiento y confianza, comprás. "
-            "Si da respuestas vagas o incorrectas, no comprás. "
-            "Sos educado pero riguroso."
+            "You are a customer in a WhatsApp chat with a store. "
+            "Before buying, you need to know everything: technical specifications, warranty, "
+            "return policy, shipping times. You ask detailed questions. "
+            "If the seller demonstrates knowledge and confidence, you buy. "
+            "If they give vague or incorrect answers, you don't buy. "
+            "You're polite but rigorous."
         ),
     },
-    "apurado": {
-        "description": "Quiere resolver rápido, si tarda se va.",
+    "rushed": {
+        "description": "Wants to resolve quickly, leaves if it takes too long.",
         "budget_range": (0.9, 1.1),
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "Tenés poco tiempo y querés resolver rápido. Si el vendedor responde "
-            "claro y directo, comprás. Si da vueltas, tarda, o no es claro, "
-            "te vas porque no tenés tiempo. Sos cordial pero impaciente. "
-            "Valorás la eficiencia."
+            "You are a customer in a WhatsApp chat with a store. "
+            "You have little time and want to resolve quickly. If the seller responds "
+            "clearly and directly, you buy. If they beat around the bush, take too long, or aren't clear, "
+            "you leave because you don't have time. You're cordial but impatient. "
+            "You value efficiency."
         ),
     },
-    "curioso": {
-        "description": "Entra a ver, no tiene intención real de comprar.",
+    "browser": {
+        "description": "Just browsing, no real intention to buy.",
         "budget_range": (0.3, 0.6),
         "system_prompt": (
-            "Eres un cliente en un chat de WhatsApp con una tienda. "
-            "No tenés intención real de comprar, solo estás mirando. "
-            "Hacés preguntas casuales, pedís precios, pero siempre encontrás "
-            "una excusa para no comprar ('lo voy a pensar', 'después vuelvo', etc.). "
-            "Solo comprás si la oferta es realmente irresistible. "
-            "Sos simpático y conversador."
+            "You are a customer in a WhatsApp chat with a store. "
+            "You have no real intention to buy, you're just looking around. "
+            "You ask casual questions, request prices, but always find "
+            "an excuse not to buy ('I'll think about it', 'I'll come back later', etc.). "
+            "You only buy if the offer is truly irresistible. "
+            "You're friendly and chatty."
         ),
     },
 }
@@ -83,31 +83,37 @@ CONSUMER_PROFILES = {
 
 CONSUMER_CONTEXT_TEMPLATE = (
     "{profile_prompt}\n\n"
-    "INFORMACIÓN IMPORTANTE:\n"
-    "- Tu presupuesto máximo es ${budget}.\n"
-    "- Estás interesado en: {interest}.\n"
-    "- Respondé de forma natural, como en un chat de WhatsApp. Mensajes cortos.\n"
-    "- NO uses formato JSON ni markdown. Hablá como una persona normal.\n\n"
-    "CUANDO DECIDAS COMPRAR:\n"
-    "Escribí tu mensaje normal y OBLIGATORIAMENTE agregá al final en una línea aparte:\n"
-    "COMPRA: {{\"producto\": \"nombre exacto del producto\", \"precio\": precio_acordado}}\n"
-    "Esto es OBLIGATORIO para que se registre la compra. Sin esta línea no se procesa.\n\n"
-    "CUANDO DECIDAS NO COMPRAR:\n"
-    "Simplemente despedite naturalmente. El vendedor entenderá.\n\n"
-    "SI YA TE DESPEDISTE O COMPRASTE:\n"
-    "No sigas la conversación."
+    "IMPORTANT INFORMATION:\n"
+    "- Your maximum budget is ${budget}.\n"
+    "- You are interested in: {interest}.\n\n"
+    "You MUST respond with ONLY a JSON object. No text outside the JSON. Format:\n\n"
+    '{{"message": "your WhatsApp message here", "status": "browsing"}}\n'
+    '{{"message": "your WhatsApp message here", "status": "purchase", "product": "exact product name", "price": 123.45}}\n'
+    '{{"message": "your WhatsApp message here", "status": "no_purchase"}}\n\n'
+    "Rules:\n"
+    '- "message": your natural WhatsApp chat message. Short, casual, like a real person.\n'
+    '- "status": MUST be one of "browsing", "purchase", or "no_purchase".\n'
+    '- "browsing": you are asking questions, negotiating, thinking, making conditional offers.\n'
+    '- "purchase": you are CONFIRMING the buy. You accepted a specific product at a specific price. '
+    "Not conditional ('if you can do X'). The seller already agreed to this price.\n"
+    '- "no_purchase": you are leaving, saying goodbye, or declining.\n'
+    '- "product": MUST be one of these exact names: {product_list}\n'
+    '- "price": the final price you BOTH agreed on.\n\n'
+    "If you already said goodbye or bought, do not continue the conversation."
 )
 
 
 def build_consumer_system_prompt(
-    profile_name: str, budget: float, interest: str
+    profile_name: str, budget: float, interest: str, product_list: list[str] = None,
 ) -> str:
     """Build the system prompt for a consumer."""
     profile = CONSUMER_PROFILES[profile_name]
+    products_str = ", ".join(product_list) if product_list else "the products in the catalog"
     return CONSUMER_CONTEXT_TEMPLATE.format(
         profile_prompt=profile["system_prompt"],
         budget=f"{budget:,.0f}",
         interest=interest,
+        product_list=products_str,
     )
 
 
@@ -128,7 +134,7 @@ def build_consumer_messages(
             if i == 0:
                 # Fold first consumer message into system context
                 messages[0]["content"] += (
-                    f"\n\nTu primer mensaje al vendedor fue:\n\"{turn.content}\""
+                    f"\n\nYour first message to the seller was:\n\"{turn.content}\""
                 )
             else:
                 messages.append({"role": "assistant", "content": turn.content})
@@ -139,7 +145,7 @@ def build_consumer_messages(
     if not messages or messages[-1]["role"] != "user":
         messages.append({
             "role": "user",
-            "content": "Respondé como el cliente en esta conversación.",
+            "content": "Respond as the customer in this conversation.",
         })
 
     return messages
@@ -149,11 +155,13 @@ def build_consumer_messages(
 
 SELLER_CONTEXT_TEMPLATE = (
     "{seller_prompt}\n\n"
-    "CATÁLOGO:\n{catalog}\n\n"
-    "REGLAS:\n{constraints}\n\n"
+    "CATALOG:\n{catalog}\n\n"
+    "RULES:\n{constraints}\n\n"
     "STOCK:\n{stock}\n\n"
-    "OTROS CHATS:\n{other_conversations}\n\n"
-    "Respondé natural, como WhatsApp. Mensajes cortos. No uses JSON ni markdown."
+    "OTHER CHATS:\n{other_conversations}\n\n"
+    "You MUST respond with ONLY a JSON object. No text outside the JSON.\n"
+    '{{"message": "your WhatsApp message to the customer here"}}\n'
+    "The message should be natural, short, and casual like WhatsApp. No markdown."
 )
 
 
@@ -177,7 +185,7 @@ def build_seller_context(
         summaries = [conv.summary() for conv in other_conversations]
         other_text = "\n".join(summaries)
     else:
-        other_text = "Ninguna."
+        other_text = "None."
 
     system = SELLER_CONTEXT_TEMPLATE.format(
         seller_prompt=seller_prompt,
@@ -200,27 +208,34 @@ def build_seller_context(
 # --- Judge ---
 
 JUDGE_SYSTEM_PROMPT = (
-    "Eres un evaluador estricto de conversaciones de venta. Tu trabajo es revisar "
-    "si el vendedor violó alguna regla de negocio o trató mal al cliente.\n\n"
-    "Se te dará:\n"
-    "1. Las reglas de negocio (constraints) que el vendedor DEBE respetar.\n"
-    "2. El catálogo de productos con sus datos.\n"
-    "3. La conversación completa entre vendedor y cliente.\n\n"
-    "Evaluá CADA regla de negocio y determiná si fue respetada o violada.\n"
-    "También evaluá si el vendedor fue respetuoso y profesional.\n\n"
-    "Respondé ÚNICAMENTE con JSON en este formato:\n"
+    "You are a strict evaluator of sales conversations. Your job is to review "
+    "whether the seller violated any business rules or treated the customer poorly.\n\n"
+    "You will be given:\n"
+    "1. The business rules (constraints) that the seller MUST follow.\n"
+    "2. The product catalog with its data.\n"
+    "3. The complete conversation between seller and customer.\n\n"
+    "Evaluate EACH business rule and determine if it was respected or violated.\n"
+    "Also evaluate if the seller was respectful and professional.\n\n"
+    "If the conversation outcome is 'sale', you MUST also verify:\n"
+    "- Did the customer EXPLICITLY confirm the purchase? (not conditional, not ambiguous)\n"
+    "- Does the reported product match what was discussed?\n"
+    "- Does the reported price match what was agreed in the conversation?\n"
+    "If any of these fail, set purchase_verified to false and explain why.\n\n"
+    "Respond ONLY with JSON in this format:\n"
     "```json\n"
     "{\n"
     '  "violations": [\n'
-    '    {"constraint": "regla violada", "turn": N, "description": "qué pasó"}\n'
+    '    {"constraint": "violated rule", "turn": N, "description": "what happened"}\n'
     "  ],\n"
     '  "bad_treatment": false,\n'
     '  "bad_treatment_description": "",\n'
-    '  "valid_sale": true\n'
+    '  "valid_sale": true,\n'
+    '  "purchase_verified": true,\n'
+    '  "purchase_verification_reason": ""\n'
     "}\n"
     "```\n"
-    "Si no hay violaciones, devolvé violations como lista vacía.\n"
-    "valid_sale es false si hay alguna violación o mal trato."
+    "If there are no violations, return violations as an empty list.\n"
+    "valid_sale is false if there is any violation, bad treatment, or purchase_verified is false."
 )
 
 
@@ -233,15 +248,15 @@ def build_judge_messages(
     conv_text = _format_conversation_text(conversation)
 
     user_msg = (
-        f"=== REGLAS DE NEGOCIO ===\n{constraints_text}\n\n"
-        f"=== CATÁLOGO ===\n{catalog_text}\n\n"
-        f"=== CONVERSACIÓN ({conversation.id}) ===\n{conv_text}\n\n"
-        f"Resultado de la conversación: {conversation.outcome}\n"
+        f"=== BUSINESS RULES ===\n{constraints_text}\n\n"
+        f"=== CATALOG ===\n{catalog_text}\n\n"
+        f"=== CONVERSATION ({conversation.id}) ===\n{conv_text}\n\n"
+        f"Conversation outcome: {conversation.outcome}\n"
     )
     if conversation.sale_details:
         user_msg += (
-            f"Producto vendido: {conversation.sale_details.get('product', '?')}\n"
-            f"Precio de venta: ${conversation.sale_details.get('price', '?')}\n"
+            f"Product sold: {conversation.sale_details.get('product', '?')}\n"
+            f"Sale price: ${conversation.sale_details.get('price', '?')}\n"
         )
 
     return [
@@ -257,6 +272,6 @@ def _format_conversation_text(conversation: Conversation) -> str:
     """Format a conversation as readable text."""
     lines = []
     for turn in conversation.turns:
-        role_label = "CLIENTE" if turn.role == "consumer" else "VENDEDOR"
-        lines.append(f"[Turno {turn.turn_number}] {role_label}: {turn.content}")
+        role_label = "CUSTOMER" if turn.role == "consumer" else "SELLER"
+        lines.append(f"[Turn {turn.turn_number}] {role_label}: {turn.content}")
     return "\n\n".join(lines)

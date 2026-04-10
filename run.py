@@ -34,7 +34,7 @@ def cmd_simulate(args):
     model = model_config.get("name", "local-model")
     temperature = model_config.get("temperature", 0.7)
     max_tokens = model_config.get("max_tokens", 1500)
-    api_key = model_config.get("api_key", "not-needed")
+    api_key = os.path.expandvars(model_config.get("api_key", "not-needed"))
 
     num_consumers = args.consumers or config.get("num_consumers", 20)
     max_turns = args.turns or config.get("max_turns", 10)
@@ -61,21 +61,36 @@ def cmd_simulate(args):
             model=consumer_model_config.get("name", model),
             temperature=consumer_model_config.get("temperature", temperature),
             max_tokens=consumer_model_config.get("max_tokens", max_tokens),
-            api_key=consumer_model_config.get("api_key", api_key),
+            api_key=os.path.expandvars(consumer_model_config.get("api_key", api_key)),
         )
     else:
         consumer_llm = None  # simulation will use the same llm
+
+    # Create LLM client for judge (same as seller by default, configurable)
+    judge_model_config = config.get("judge_model")
+    if judge_model_config:
+        judge_llm = LLMClient(
+            base_url=judge_model_config.get("base_url", base_url),
+            model=judge_model_config.get("name", model),
+            temperature=judge_model_config.get("temperature", 0.1),
+            max_tokens=judge_model_config.get("max_tokens", max_tokens),
+            api_key=os.path.expandvars(judge_model_config.get("api_key", api_key)),
+        )
+    else:
+        judge_llm = None  # evaluation will use the same llm
 
     # Create stock tracker
     stock = StockTracker(stock_config)
 
     print(f"=== Sales Arena ===")
-    print(f"Modelo vendedor: {model}")
+    print(f"Seller model: {model}")
     if consumer_model_config:
-        print(f"Modelo consumidores: {consumer_model_config.get('name', model)}")
-    print(f"Consumidores: {num_consumers}")
-    print(f"Turnos máx: {max_turns}")
-    print(f"Productos en stock: {len(stock_config)}")
+        print(f"Consumer model: {consumer_model_config.get('name', model)}")
+    if judge_model_config:
+        print(f"Judge model: {judge_model_config.get('name', model)}")
+    print(f"Consumers: {num_consumers}")
+    print(f"Max turns: {max_turns}")
+    print(f"Products in stock: {len(stock_config)}")
     print()
 
     # Progress callback
@@ -84,8 +99,24 @@ def cmd_simulate(args):
         preview = content[:80].replace("\n", " ")
         print(f"  [{conv_id}] T{turn_round} {label} {preview}...")
 
+    # Event log for detailed tracing
+    event_log = []
+
+    def on_event(event):
+        event_log.append(event)
+        t = event["type"]
+        seq = event["seq"]
+        cid = event.get("conv_id", "")
+        if t == "stock_update":
+            print(f"    📦 #{seq} [{cid}] STOCK: {event['product']} {event['before']} → {event['after']}")
+        elif t == "status_change":
+            print(f"    🏁 #{seq} [{cid}] {event['outcome'].upper()}"
+                  + (f" — {event['details'].get('product', '')} @ ${event['details'].get('price', '')}" if event.get('details', {}).get('product') else ""))
+        elif t == "consumer_intent" and event["status"] != "browsing":
+            print(f"    🎯 #{seq} [{cid}] intent={event['status']}")
+
     # Run simulation
-    print("--- Simulación ---")
+    print("--- Simulation ---")
     conversations = run_simulation(
         llm=llm,
         seller_prompt=seller_prompt,
@@ -97,16 +128,17 @@ def cmd_simulate(args):
         product_list=product_list,
         price_map=price_map,
         on_turn=on_turn,
+        on_event=on_event,
         consumer_llm=consumer_llm,
     )
 
     sim_tokens = llm.usage.total
-    print(f"\nSimulación completa. Tokens usados: {sim_tokens}")
+    print(f"\nSimulation complete. Tokens used: {sim_tokens}")
 
     # Run evaluation
-    print("\n--- Evaluación ---")
+    print("\n--- Evaluation ---")
     result = evaluate_experiment(
-        llm=llm,
+        llm=judge_llm or llm,
         conversations=conversations,
         catalog_text=catalog_text,
         constraints_text=constraints_text,
@@ -114,36 +146,43 @@ def cmd_simulate(args):
         seller_prompt=seller_prompt,
         model_name=model,
         model_params={"temperature": temperature, "max_tokens": max_tokens},
+        on_event=lambda e: event_log.append(e),
+        initial_stock=stock_config,
     )
 
     eval_tokens = llm.usage.total - sim_tokens
-    print(f"Evaluación completa. Tokens usados: {eval_tokens}")
+    print(f"Evaluation complete. Tokens used: {eval_tokens}")
 
     # Write results
     exp_dir = EXPERIMENTS / result.experiment_id
     _write_results(exp_dir, result, seller_prompt)
+
+    # Write event log
+    if event_log:
+        with open(exp_dir / "events.json", "w", encoding="utf-8") as f:
+            json.dump(event_log, f, ensure_ascii=False, indent=2, default=str)
 
     # Append to results.tsv
     _append_to_tsv(result)
 
     # Print summary
     print(f"\n{'='*50}")
-    print(f"RESULTADOS")
+    print(f"RESULTS")
     print(f"{'='*50}")
     print(f"Profit: ${result.total_profit:,.2f}")
     print(f"Revenue: ${result.total_revenue:,.2f}")
-    print(f"Ventas válidas: {result.valid_sales}/{result.total_conversations}")
-    print(f"Ventas inválidas: {result.invalid_sales}")
-    print(f"No-ventas: {result.no_sales}")
-    print(f"Violaciones: {len(result.violations)}")
-    print(f"Tokens totales: {result.total_tokens}")
+    print(f"Valid sales: {result.valid_sales}/{result.total_conversations}")
+    print(f"Invalid sales: {result.invalid_sales}")
+    print(f"No-sales: {result.no_sales}")
+    print(f"Violations: {len(result.violations)}")
+    print(f"Total tokens: {result.total_tokens}")
 
     if result.violations:
-        print(f"\nViolaciones detectadas:")
+        print(f"\nViolations detected:")
         for v in result.violations:
             print(f"  - {v.conversation_id}: {v.constraint} — {v.description}")
 
-    print(f"\nResultados guardados en: {exp_dir}")
+    print(f"\nResults saved to: {exp_dir}")
     print(f"profit:{result.total_profit:.2f}")
 
 
@@ -153,21 +192,21 @@ def cmd_evaluate(args):
     result_file = exp_dir / "result.json"
 
     if not result_file.exists():
-        print(f"Error: {result_file} no existe.")
+        print(f"Error: {result_file} does not exist.")
         sys.exit(1)
 
     with open(result_file) as f:
         data = json.load(f)
 
-    print(f"Re-evaluación de {exp_dir.name}")
-    print(f"Profit original: ${data.get('total_profit', 0):,.2f}")
-    print(f"Ventas válidas: {data.get('valid_sales', 0)}/{data.get('total_conversations', 0)}")
+    print(f"Re-evaluation of {exp_dir.name}")
+    print(f"Original profit: ${data.get('total_profit', 0):,.2f}")
+    print(f"Valid sales: {data.get('valid_sales', 0)}/{data.get('total_conversations', 0)}")
 
 
 def _read_file(path: Path) -> str:
     """Read a text file or exit with error."""
     if not path.exists():
-        print(f"Error: {path} no existe. Ejecutá el setup primero.")
+        print(f"Error: {path} does not exist. Run setup first.")
         sys.exit(1)
     return path.read_text(encoding="utf-8")
 
@@ -175,7 +214,7 @@ def _read_file(path: Path) -> str:
 def _read_config(path: Path) -> dict:
     """Read YAML config file."""
     if not path.exists():
-        print(f"Error: {path} no existe. Ejecutá el setup primero.")
+        print(f"Error: {path} does not exist. Run setup first.")
         sys.exit(1)
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
@@ -238,21 +277,21 @@ def _write_results(exp_dir: Path, result, seller_prompt: str):
 def _format_conversation_md(conv: Conversation) -> str:
     """Format a conversation as readable markdown."""
     lines = [
-        f"# Conversación {conv.id}",
+        f"# Conversation {conv.id}",
         f"",
-        f"- **Perfil**: {conv.consumer_profile}",
-        f"- **Resultado**: {conv.outcome}",
+        f"- **Profile**: {conv.consumer_profile}",
+        f"- **Outcome**: {conv.outcome}",
     ]
     if conv.sale_details:
-        lines.append(f"- **Producto**: {conv.sale_details.get('product', '?')}")
-        lines.append(f"- **Precio**: ${conv.sale_details.get('price', '?')}")
+        lines.append(f"- **Product**: {conv.sale_details.get('product', '?')}")
+        lines.append(f"- **Price**: ${conv.sale_details.get('price', '?')}")
     lines.append("")
     lines.append("---")
     lines.append("")
 
     for turn in conv.turns:
-        role_label = "**CLIENTE**" if turn.role == "consumer" else "**VENDEDOR**"
-        lines.append(f"### Turno {turn.turn_number} — {role_label}")
+        role_label = "**CUSTOMER**" if turn.role == "consumer" else "**SELLER**"
+        lines.append(f"### Turn {turn.turn_number} — {role_label}")
         lines.append("")
         lines.append(turn.content)
         lines.append("")
@@ -263,26 +302,26 @@ def _format_conversation_md(conv: Conversation) -> str:
 def _build_summary(result) -> str:
     """Build the summary.md content."""
     lines = [
-        f"# Experimento {result.experiment_id}",
+        f"# Experiment {result.experiment_id}",
         "",
-        "## Resultado",
-        f"- **Modelo**: {result.model}",
-        f"- **Profit**: ${result.total_profit:,.2f} (solo ventas válidas)",
+        "## Results",
+        f"- **Model**: {result.model}",
+        f"- **Profit**: ${result.total_profit:,.2f} (valid sales only)",
         f"- **Revenue**: ${result.total_revenue:,.2f}",
-        f"- **Ventas válidas**: {result.valid_sales}/{result.total_conversations}",
-        f"- **Ventas inválidas** (violaciones): {result.invalid_sales}",
-        f"- **No-ventas**: {result.no_sales}",
-        f"- **Tokens totales**: {result.total_tokens}",
+        f"- **Valid sales**: {result.valid_sales}/{result.total_conversations}",
+        f"- **Invalid sales** (violations): {result.invalid_sales}",
+        f"- **No-sales**: {result.no_sales}",
+        f"- **Total tokens**: {result.total_tokens}",
         "",
     ]
 
     if result.violations:
-        lines.append("## Violaciones")
+        lines.append("## Violations")
         for v in result.violations:
             lines.append(f"- **{v.conversation_id}**: {v.constraint} — {v.description}")
         lines.append("")
 
-    lines.append("## Análisis")
+    lines.append("## Analysis")
     lines.append(result.analysis)
     lines.append("")
 
@@ -291,22 +330,22 @@ def _build_summary(result) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Sales Arena — Sales agent trainer")
-    subparsers = parser.add_subparsers(dest="command", help="Comando")
+    subparsers = parser.add_subparsers(dest="command", help="Command")
 
     # simulate
-    sim_parser = subparsers.add_parser("simulate", help="Correr un experimento")
+    sim_parser = subparsers.add_parser("simulate", help="Run an experiment")
     sim_parser.add_argument(
-        "--consumers", type=int, default=None, help="Cantidad de consumidores"
+        "--consumers", type=int, default=None, help="Number of consumers"
     )
     sim_parser.add_argument(
-        "--turns", type=int, default=None, help="Turnos máximos por conversación"
+        "--turns", type=int, default=None, help="Max turns per conversation"
     )
 
     # evaluate
     eval_parser = subparsers.add_parser(
-        "evaluate", help="Re-evaluar un experimento pasado"
+        "evaluate", help="Re-evaluate a past experiment"
     )
-    eval_parser.add_argument("experiment_dir", help="Directorio del experimento")
+    eval_parser.add_argument("experiment_dir", help="Experiment directory")
 
     args = parser.parse_args()
 
