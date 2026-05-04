@@ -78,7 +78,7 @@ git commit -m "setup: initial configuration"
 ## Phase 2: Run an Experiment
 
 ```bash
-python run.py simulate
+uv run python run.py simulate
 ```
 
 This runs the full simulation (20 consumers, 10 max turns) and generates results in `experiments/<timestamp>/`.
@@ -96,8 +96,8 @@ There you'll find: profit, sales, violations, and analyst analysis.
 ### Overrides
 
 ```bash
-python run.py simulate --consumers 10    # fewer consumers (faster)
-python run.py simulate --turns 5         # fewer turns
+uv run python run.py simulate --consumers 10    # fewer consumers (faster)
+uv run python run.py simulate --turns 5         # fewer turns
 ```
 
 ## Phase 3: Optimization Loop
@@ -108,7 +108,7 @@ This is the main loop. Iterate on the seller prompt to maximize profit.
 
 ```
 LOOP:
-  1. Run: python run.py simulate > run.log 2>&1
+  1. Run: uv run python run.py simulate > run.log 2>&1
   2. Read: experiments/<latest>/summary.md
   3. Extract: total profit
   4. IF profit improved over baseline:

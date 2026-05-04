@@ -8,8 +8,10 @@ Sales Arena es un entrenador de agentes de ventas. Traés tu prompt de vendedor,
 
 ### 1. Instalar
 
+Requiere [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
+
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 2. Setup con tu agente
@@ -19,7 +21,7 @@ Dále `program.md` a tu agente (Claude Code, Codex, etc.) y dejá que te guíe p
 ### 3. Correr
 
 ```bash
-python run.py simulate
+uv run python run.py simulate
 ```
 
 ### 4. Iterar

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn test:unit)",
+      "Bash(yarn test:acceptance)"
+    ]
+  }
+}

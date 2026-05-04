@@ -8,6 +8,9 @@ import sys
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 from arena.evaluation import evaluate_experiment
 from arena.llm import LLMClient
