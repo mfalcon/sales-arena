@@ -104,6 +104,8 @@ uv run python run.py simulate --turns 5         # fewer turns
 
 This is the main loop. Iterate on the seller prompt to maximize profit.
 
+**Definition of "iteration":** 1 iteration = 1 full run of `uv run python run.py simulate` (default: 20 consumers × 10 turns max each), followed by analysis and commit/rollback. It is NOT 1 turn nor 1 conversation. When the user says "10 iteraciones", they mean 10 complete `simulate` runs.
+
 ### Algorithm
 
 ```

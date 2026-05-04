@@ -59,6 +59,8 @@ This project is designed to be run by an orchestrator agent (Codex, Claude Code)
 
 ## Autonomous Optimization Mode
 
+**Definition of "iteration":** 1 iteration = 1 full run of `uv run python run.py simulate` (default: 20 consumers × 10 turns max each). It is NOT 1 turn nor 1 conversation. So "10 iteraciones" means 10 complete `simulate` runs, each followed by analyze + commit/rollback.
+
 When the user requests "N iteraciones" or "corré el loop", you are authorized to follow `program.md` Phase 3 + Phase 5 without per-step confirmation, including:
 
 - Edit `workspace/seller_prompt.md`
