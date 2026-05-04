@@ -32,10 +32,10 @@ class StockTracker:
         lines = []
         for product, qty in self._stock.items():
             if qty > 0:
-                lines.append(f"- {product}: {qty} disponible(s)")
+                lines.append(f"- {product}: {qty} available")
             else:
-                lines.append(f"- {product}: AGOTADO")
-        return "\n".join(lines) if lines else "No hay productos en stock."
+                lines.append(f"- {product}: OUT OF STOCK")
+        return "\n".join(lines) if lines else "No products in stock."
 
     def snapshot(self) -> dict[str, int]:
         """Current stock as a dict."""

@@ -157,3 +157,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Experiment run outputs (timestamped dirs)
+experiments/2*/

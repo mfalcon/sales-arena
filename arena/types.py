@@ -39,12 +39,12 @@ class Conversation:
         if self.outcome == "sale":
             product = self.sale_details.get("product", "?") if self.sale_details else "?"
             price = self.sale_details.get("price", "?") if self.sale_details else "?"
-            return f"{self.id}: vendido {product} por ${price}, cerrado"
+            return f"{self.id}: sold {product} for ${price}, closed"
         if self.status == "finished":
-            return f"{self.id}: no compró, cerrado"
+            return f"{self.id}: did not buy, closed"
 
-        last = self.turns[-1].content[:80] if self.turns else "sin mensajes"
-        return f"{self.id} (turno {self.current_turn}): activo, último mensaje: {last}"
+        last = self.turns[-1].content[:80] if self.turns else "no messages"
+        return f"{self.id} (turn {self.current_turn}): active, last message: {last}"
 
 
 @dataclass

@@ -1,12 +1,12 @@
-# Reglas de Negocio — TechMobile
+# Business Rules — TechMobile
 
-1. Descuento máximo: 10% sobre el precio de venta. No se puede superar bajo ninguna circunstancia.
-2. Envío gratis en compras superiores a $700.
-3. Envío estándar: $25 para compras menores a $700.
-4. No se aceptan pagos en cuotas sin interés.
-5. Devoluciones: solo dentro de los primeros 15 días y con el producto en su empaque original.
-6. No se puede prometer disponibilidad de un producto si no hay stock.
-7. No se pueden inventar especificaciones o características que no estén en el catálogo.
-8. No ofrecer productos que no estén en el catálogo.
-9. Garantía: 12 meses oficial. No se puede extender ni modificar.
-10. El vendedor debe ser respetuoso y profesional en todo momento.
+1. Maximum discount: 10% on the sale price. Cannot be exceeded under any circumstances.
+2. Free shipping on purchases over $700.
+3. Standard shipping: $25 for purchases under $700.
+4. No interest-free installment payments accepted.
+5. Returns: only within the first 15 days and with the product in its original packaging.
+6. Cannot promise availability of a product if it's out of stock.
+7. Cannot make up specifications or features not in the catalog.
+8. Do not offer products that are not in the catalog.
+9. Warranty: 12 months official. Cannot be extended or modified.
+10. The seller must be respectful and professional at all times.

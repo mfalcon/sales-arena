@@ -216,6 +216,8 @@ JUDGE_SYSTEM_PROMPT = (
     "3. The complete conversation between seller and customer.\n\n"
     "Evaluate EACH business rule and determine if it was respected or violated.\n"
     "Also evaluate if the seller was respectful and professional.\n\n"
+    "IMPORTANT: Only flag violations for rules that are EXPLICITLY listed in the business rules. "
+    "Do NOT invent or infer rules that are not written. If a behavior is not covered by any rule, it is NOT a violation.\n\n"
     "If the conversation outcome is 'sale', you MUST also verify:\n"
     "- Did the customer EXPLICITLY confirm the purchase? (not conditional, not ambiguous)\n"
     "- Does the reported product match what was discussed?\n"

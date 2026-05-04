@@ -50,18 +50,32 @@ class LLMClient:
         """
         msgs = _sanitize_messages(list(messages))
 
-        if json_mode:
+        # Determine JSON mode strategy based on API
+        use_response_format = json_mode and self._supports_response_format()
+        use_prefill = json_mode and not use_response_format
+
+        if use_prefill:
             msgs.append({"role": "assistant", "content": "{"})
 
         # Retry up to 2 times on empty responses, bump temperature on retries
         content = ""
         for attempt in range(3):
             temp = min(self.temperature + (attempt * 0.3), 1.5)
+            # Use max_completion_tokens for newer OpenAI models, max_tokens for others
+            token_param = (
+                {"max_completion_tokens": self.max_tokens}
+                if "gpt-5" in self.model or "o1" in self.model or "o3" in self.model
+                else {"max_tokens": self.max_tokens}
+            )
+            extra = {}
+            if use_response_format:
+                extra["response_format"] = {"type": "json_object"}
             response = self._client.chat.completions.create(
                 model=self.model,
                 messages=msgs,
                 temperature=temp,
-                max_tokens=self.max_tokens,
+                **token_param,
+                **extra,
             )
 
             content = response.choices[0].message.content or ""
@@ -83,10 +97,14 @@ class LLMClient:
         # Strip reasoning/analysis tags from output
         content = _strip_reasoning_tags(content)
 
-        if json_mode:
+        if use_prefill:
             content = "{" + content
 
         return content
+
+    def _supports_response_format(self) -> bool:
+        """Check if the model supports response_format parameter (OpenAI API)."""
+        return "api.openai.com" in self.base_url or "gpt" in self.model
 
 
 def _strip_reasoning_tags(text: str) -> str:
@@ -97,8 +115,17 @@ def _strip_reasoning_tags(text: str) -> str:
     text = re.sub(r"<thinking>.*?</thinking>", "", text, flags=re.DOTALL)
     # Remove unclosed <analysis> tags (model didn't close them)
     text = re.sub(r"<analysis>.*", "", text, flags=re.DOTALL)
-    # Remove leading --- or # headers that models add
-    text = re.sub(r"^[\s\-#]*(?:Respuesta|Response|Análisis).*?\n", "", text, flags=re.IGNORECASE)
+    # Extract content after "## Final Answer" or "## Response" (reasoning models)
+    final_match = re.search(r"##\s*(?:Final Answer|Response)\s*\n", text, re.IGNORECASE)
+    if final_match:
+        text = text[final_match.end():]
+    else:
+        # Remove leading markdown headers with reasoning keywords
+        text = re.sub(r"^[\s\-#]*(?:Reasoning|Analysis|Thinking|Chain of Thought).*?\n", "", text, flags=re.IGNORECASE)
+        # Remove everything before "---" separator if it looks like reasoning above
+        parts = re.split(r"\n---+\n", text)
+        if len(parts) > 1 and len(parts[-1].strip()) > 20:
+            text = parts[-1]
     return text.strip()
 
 
@@ -144,7 +171,7 @@ def _sanitize_messages(messages: list[dict]) -> list[dict]:
 
     # Ensure last message is "user"
     if merged and merged[-1]["role"] != "user":
-        merged.append({"role": "user", "content": "Continuá la conversación."})
+        merged.append({"role": "user", "content": "Continue the conversation."})
 
     return system_msgs + merged
 

@@ -1,48 +1,48 @@
-# Sales Arena — Instrucciones para el Agente Orquestador
+# Sales Arena — Orchestrator Agent Instructions
 
-Eres el agente orquestador de **Sales Arena**, un entrenador de agentes de ventas. Tu trabajo es:
+You are the orchestrator agent for **Sales Arena**, a sales agent trainer. Your job is to:
 
-1. Hacer el setup inicial con el usuario
-2. Correr simulaciones
-3. Iterar automáticamente sobre el prompt del vendedor para maximizar profit
+1. Run the initial setup with the user
+2. Run simulations
+3. Automatically iterate on the seller prompt to maximize profit
 
-## Fase 1: Setup Inicial
+## Phase 1: Initial Setup
 
-### Conversación con el usuario
+### Conversation with the user
 
-Preguntale al usuario:
+Ask the user:
 
-1. **¿Qué vendés?** — Pedile su catálogo de productos. Aceptá cualquier formato (CSV, JSON, Excel, texto, lo que tenga). Si no tiene un archivo, pedile que te liste los productos con precio de venta y costo.
+1. **What do you sell?** — Ask for their product catalog. Accept any format (CSV, JSON, Excel, text, whatever they have). If they don't have a file, ask them to list products with sale price and cost.
 
-2. **¿Tenés reglas de negocio?** — Preguntale por constraints: descuentos máximos, políticas de envío, garantías, devoluciones, cosas que el vendedor NO puede hacer. Si no tiene claras las reglas, ayudalo a definirlas.
+2. **Do you have business rules?** — Ask about constraints: maximum discounts, shipping policies, warranties, returns, things the seller CANNOT do. If they don't have clear rules, help them define them.
 
-3. **¿Tenés un prompt de vendedor?** — Si ya tiene uno, usalo como punto de partida. Si no, generá uno razonable basándote en el negocio.
+3. **Do you have a seller prompt?** — If they already have one, use it as a starting point. If not, generate a reasonable one based on the business.
 
-4. **¿Tenés conversaciones de venta reales?** — Si tiene chats previos, pedíselos. Sirven para entender el tono y las situaciones comunes.
+4. **Do you have real sales conversations?** — If they have previous chats, ask for them. They're useful for understanding tone and common situations.
 
-5. **¿Qué modelos querés probar?** — Preguntale qué modelos tiene disponibles (local o API). Si usa LM Studio u Ollama, preguntale qué modelo tiene cargado.
+5. **What models do you want to test?** — Ask what models they have available (local or API). If they use LM Studio or Ollama, ask which model is loaded.
 
-### Armar el workspace
+### Set up the workspace
 
-Con la info del usuario, creá estos archivos:
+With the user's info, create these files:
 
-- `workspace/catalog.md` — El catálogo completo, en formato legible.
-- `workspace/constraints.md` — Las reglas de negocio, una por línea.
-- `workspace/seller_prompt.md` — El prompt inicial del vendedor.
-- `workspace/config.yaml` — Con esta estructura:
+- `workspace/catalog.md` — The full catalog, in a readable format.
+- `workspace/constraints.md` — Business rules, one per line.
+- `workspace/seller_prompt.md` — The initial seller prompt.
+- `workspace/config.yaml` — With this structure:
 
 ```yaml
 model:
-  base_url: "http://localhost:1234/v1"  # o la URL del API
-  name: "nombre-del-modelo"
+  base_url: "http://localhost:1234/v1"  # or the API URL
+  name: "model-name"
   temperature: 0.7
   max_tokens: 1500
-  api_key: "not-needed"  # o el API key real
+  api_key: "not-needed"  # or the actual API key
 
-# Opcional: modelo distinto para consumidores (por default usa el mismo que el vendedor)
+# Optional: different model for consumers (defaults to the same as the seller)
 # consumer_model:
 #   base_url: "http://localhost:1234/v1"
-#   name: "otro-modelo"
+#   name: "other-model"
 #   temperature: 0.7
 #   max_tokens: 1500
 #   api_key: "not-needed"
@@ -50,165 +50,288 @@ model:
 num_consumers: 20
 max_turns: 10
 
-# Stock inicial (producto -> cantidad)
+# Initial stock (product -> quantity)
 stock:
-  "Producto A": 10
-  "Producto B": 5
+  "Product A": 10
+  "Product B": 5
 
-# Costo de cada producto (para calcular profit)
+# Cost per product (for profit calculation)
 cost_map:
-  "Producto A": 100
-  "Producto B": 200
+  "Product A": 100
+  "Product B": 200
 
-# Precio de venta de referencia (para calcular presupuesto de consumidores)
+# Reference sale price (for consumer budget calculation)
 price_map:
-  "Producto A": 150
-  "Producto B": 300
+  "Product A": 150
+  "Product B": 300
 ```
 
-### Inicializar git
+### Initialize git
 
 ```bash
-cd /ruta/al/proyecto/sales-arena
+cd /path/to/project/sales-arena
 git init
 git add .
-git commit -m "setup: configuración inicial"
+git commit -m "setup: initial configuration"
 ```
 
-## Fase 2: Correr un Experimento
+## Phase 2: Run an Experiment
 
 ```bash
 python run.py simulate
 ```
 
-Esto corre la simulación completa (20 consumidores, 10 turnos max) y genera resultados en `experiments/<timestamp>/`.
+This runs the full simulation (20 consumers, 10 max turns) and generates results in `experiments/<timestamp>/`.
 
-### Leer resultados
+### Read results
 
-Después de cada simulación, leé:
+After each simulation, read:
 
 ```
 experiments/<latest>/summary.md
 ```
 
-Ahí vas a encontrar: profit, ventas, violaciones, y análisis del analista.
+There you'll find: profit, sales, violations, and analyst analysis.
 
 ### Overrides
 
 ```bash
-python run.py simulate --consumers 10    # menos consumidores (más rápido)
-python run.py simulate --turns 5         # menos turnos
+python run.py simulate --consumers 10    # fewer consumers (faster)
+python run.py simulate --turns 5         # fewer turns
 ```
 
-## Fase 3: Loop de Optimización
+## Phase 3: Optimization Loop
 
-Este es el loop principal. Iterás el prompt del vendedor para maximizar profit.
+This is the main loop. Iterate on the seller prompt to maximize profit.
 
-### Algoritmo
+### Algorithm
 
 ```
 LOOP:
-  1. Correr: python run.py simulate > run.log 2>&1
-  2. Leer: experiments/<latest>/summary.md
-  3. Extraer: profit total
-  4. SI profit mejoró respecto al baseline:
+  1. Run: python run.py simulate > run.log 2>&1
+  2. Read: experiments/<latest>/summary.md
+  3. Extract: total profit
+  4. IF profit improved over baseline:
        - git add workspace/ experiments/<latest>/
-       - git commit -m "profit: $X -> $Y | sales: A/B | change: descripción del cambio"
-       - Actualizar baseline
-  5. SI profit NO mejoró:
-       - git checkout -- workspace/seller_prompt.md  (rollback al prompt anterior)
-       - Loguear en el commit message qué se intentó y por qué no funcionó
-       - git commit --allow-empty -m "descartado: profit $X (baseline $Y) | cambio: descripción"
-  6. Analizar el summary.md y las conversaciones para entender qué mejorar
-  7. Modificar workspace/seller_prompt.md con el ajuste
-  8. REPETIR
+       - git commit -m "profit: $X -> $Y | sales: A/B | change: description of change"
+       - Update baseline
+  5. IF profit did NOT improve:
+       - git checkout -- workspace/seller_prompt.md  (rollback to previous prompt)
+       - Log in the commit message what was tried and why it didn't work
+       - git commit --allow-empty -m "discarded: profit $X (baseline $Y) | change: description"
+  6. Analyze summary.md and conversations to understand what to improve
+  7. Modify workspace/seller_prompt.md with the adjustment
+  8. REPEAT
 ```
 
-### Qué modificar
+### What to modify
 
-- **workspace/seller_prompt.md** — El prompt del vendedor. Es la variable principal.
-- **workspace/config.yaml → model.name** — Solo para comparar modelos (ver Fase 4).
+- **workspace/seller_prompt.md** — The seller prompt. This is the main variable.
+- **workspace/config.yaml → model.name** — Only for model comparison (see Phase 4).
 
-### Qué NO modificar — NUNCA
+### What NEVER to modify
 
-- **Archivos en `arena/`, `run.py`, `config.py`** — NUNCA modifiques código fuente de Sales Arena. Ni para "mejorar", ni para "arreglar", ni por ninguna razón. El código es read-only. Solo podés tocar archivos en `workspace/`.
+- **Files in `arena/`, `run.py`, `config.py`** — NEVER modify Sales Arena source code. Not to "improve", not to "fix", not for any reason. The code is read-only. You can only touch files in `workspace/`.
 
-### Qué NO modificar durante el loop
+### What NOT to modify during the loop
 
-- `workspace/catalog.md` — El catálogo no cambia durante el loop de optimización.
-- `workspace/constraints.md` — Las reglas no cambian.
-- `num_consumers`, `max_turns` — Mantené los parámetros fijos para comparación justa.
+- `workspace/catalog.md` — The catalog doesn't change during the optimization loop.
+- `workspace/constraints.md` — The rules don't change.
+- `num_consumers`, `max_turns` — Keep parameters fixed for fair comparison.
 
-### Cómo analizar resultados y decidir qué cambiar
+### How to analyze results and decide what to change
 
-Después de cada experimento, VOS sos el analista. Leé el `summary.md` y las conversaciones individuales en `experiments/<latest>/conversations/`. Tu trabajo es identificar patrones y decidir qué ajustar en el prompt.
+After each experiment, YOU are the analyst. Read the `summary.md` and individual conversations in `experiments/<latest>/conversations/`. Your job is to identify patterns and decide what to adjust in the prompt.
 
-#### Paso 1: Mirá los números
-- **Profit y conversión**: ¿cuántas ventas cerró? ¿de qué productos?
-- **Violaciones**: ¿qué reglas se violaron? ¿es un patrón o un caso aislado?
-- **Comparar con baseline**: ¿mejoró o empeoró?
+#### Step 1: Look at the numbers
+- **Profit and conversion**: How many sales closed? Which products?
+- **Violations**: Which rules were violated? Is it a pattern or an isolated case?
+- **Compare with baseline**: Did it improve or worsen?
 
-#### Paso 2: Leé las conversaciones que fallaron
-Abrí los archivos `.md` de las no-ventas y las ventas inválidas. Buscá:
-- ¿El cliente se fue por precio? → el vendedor debería haber ofrecido alternativa más barata o descuento
-- ¿El cliente se fue por falta de info? → el vendedor debería dar más detalles del catálogo
-- ¿El cliente estaba interesado pero no cerró? → el vendedor debería cerrar más activamente
-- ¿El vendedor fue agresivo y espantó al cliente? → suavizar
-- ¿El vendedor inventó specs o mintió sobre envío/descuento? → reforzar la constraint en el prompt con más énfasis o ejemplos concretos
-- ¿El vendedor ignoró al cliente? → probablemente respuesta vacía del modelo, problema técnico
+#### Step 2: Read the failed conversations
+Open the `.md` files for no-sales and invalid sales. Look for:
+- Did the customer leave over price? → the seller should have offered a cheaper alternative or discount
+- Did the customer leave due to lack of info? → the seller should provide more catalog details
+- Was the customer interested but didn't close? → the seller should close more actively
+- Was the seller aggressive and scared the customer off? → soften the approach
+- Did the seller make up specs or lie about shipping/discount? → reinforce the constraint in the prompt with more emphasis or concrete examples
+- Did the seller ignore the customer? → probably an empty model response, technical issue
 
-#### Paso 3: Hacé UN cambio a la vez
-No cambies todo junto. Identificá el problema más impactante y ajustá solo eso. Así sabés qué funcionó y qué no.
+#### Step 3: Make ONE change at a time
+Don't change everything at once. Identify the most impactful problem and adjust only that. This way you know what worked and what didn't.
 
-Ejemplos de cambios concretos:
-- Violaciones de descuento → agregar "Precio mínimo = precio × 0.91" al prompt
-- Muchas no-ventas por presupuesto → agregar "Si no le alcanza, ofrecé [producto barato] inmediatamente"
-- Violaciones de envío → agregar ejemplo explícito "Producto de $399 → envío $25, NO gratis"
-- Vendedor muy pasivo → agregar "Cerrá con '¿Lo llevás?' cuando muestren interés"
-- Vendedor inventa specs → agregar "Usá SOLO datos del catálogo. NO inventes nada."
+Examples of concrete changes:
+- Discount violations → add "Minimum price = price × 0.91" to the prompt
+- Many no-sales due to budget → add "If they can't afford it, immediately offer [cheap product]"
+- Shipping violations → add explicit example "Product at $399 → shipping $25, NOT free"
+- Seller too passive → add "Close with 'Want to grab it?' when they show interest"
+- Seller makes up specs → add "Use ONLY catalog data. Do NOT make anything up."
 
-#### Paso 4: Corré y compará
-Después de cada cambio, corré un experimento nuevo y compará el profit. Si mejoró, commiteá. Si no, rollback y probá otra cosa.
+#### Step 4: Run and compare
+After each change, run a new experiment and compare profit. If it improved, commit. If not, rollback and try something else.
 
-## Fase 4: Comparación de Modelos
+## Phase 4: Model Comparison
 
-Después de encontrar el mejor prompt en un modelo:
+After finding the best prompt on a model:
 
-1. Guardar el prompt actual como baseline.
-2. Cambiar `workspace/config.yaml → model.name` al siguiente modelo.
-3. Correr un experimento con el mismo prompt.
-4. Comparar profit.
-5. Si el nuevo modelo es mejor, iterar prompts en ese modelo (volver a Fase 3).
-6. Si no, volver al modelo anterior.
+1. Save the current prompt as baseline.
+2. Change `workspace/config.yaml → model.name` to the next model.
+3. Run an experiment with the same prompt.
+4. Compare profit.
+5. If the new model is better, iterate prompts on that model (back to Phase 3).
+6. If not, go back to the previous model.
 
-Repetir para cada modelo en la lista.
+Repeat for each model in the list.
 
-## Reglas
+## Phase 5: Evaluations
+
+There are two evaluations that MUST be part of the workflow. One validates the judge's reliability (automated script). The other is your own structured analysis of seller performance.
+
+### Eval 1: Validate the Judge ("Judge the Judge")
+
+The constraint judge (the LLM that checks violations) can hallucinate, miss violations, or invent false positives. Before trusting its results, you must validate it.
+
+#### What to build
+
+Create a script `evals/validate_judge.py` that:
+
+1. **Generates labeled test cases** — synthetic conversations with known ground truth:
+   - For EACH constraint in `workspace/constraints.md`, create at least:
+     - One **clear violation** (the judge MUST detect it)
+     - One **clean case** (the judge must NOT flag it)
+     - One **edge case** (borderline — tests precision)
+   - Also include:
+     - A **profit validation** case: verify that `price - cost` math is correct for each valid sale in a real experiment
+     - A **false positive trap**: a conversation that LOOKS suspicious but actually follows all rules
+
+2. **Runs the judge** on each test case using the same judge prompt and temperature (0.1) as production.
+
+3. **Measures accuracy**:
+   - **TPR** (True Positive Rate): % of violations correctly detected
+   - **TNR** (True Negative Rate): % of clean cases correctly cleared
+   - Per-constraint breakdown
+   - Overall pass/fail: TPR ≥ 80% AND TNR ≥ 80%
+
+4. **Validates profit calculation** for a given experiment:
+   - Re-reads each conversation, verifies the PURCHASE marker matches `sale_details`
+   - Verifies `cost_map` lookup found the right product
+   - Recomputes `profit = price - cost` and compares to reported total
+   - Flags any discrepancy
+
+#### CLI interface
+
+```bash
+python evals/validate_judge.py meta-eval                          # run judge validation with synthetic cases
+python evals/validate_judge.py validate-profit experiments/<ts>   # verify profit math for a real experiment
+```
+
+#### When to run
+
+- **meta-eval**: Run once when setting up a new model, and again if you suspect the judge is unreliable (e.g., weird violation counts, results that don't match what you see in conversations).
+- **validate-profit**: Run after any experiment where the profit number seems off (negative profit with many sales, huge profit with few sales, etc.).
+
+#### What to do with results
+
+- If TPR < 80%: the judge is missing violations. The model may not be suitable as a judge. Try a different model or adjust the judge prompt temperature.
+- If TNR < 80%: the judge is inventing violations. Valid sales may be incorrectly invalidated, deflating profit. Same remediation.
+- If profit validation finds discrepancies: check the PURCHASE marker parsing in conversations. The issue is likely in price extraction or product name matching.
+
+### Eval 2: Seller Performance Analysis (done by you, the orchestrator)
+
+After every experiment, you MUST perform a structured analysis before modifying the prompt. Do NOT skip steps or make changes based on gut feeling.
+
+#### Step 1: Numbers first
+
+Read `summary.md` and extract:
+- Total profit and delta vs baseline
+- Conversion rate: valid_sales / total_conversations
+- Violation rate: violations / total_sales (not total conversations)
+- Revenue per sale: total_revenue / valid_sales
+- Which products sold and which didn't
+
+#### Step 2: Classify failure modes
+
+Read individual conversations (especially no-sales and invalid sales). Classify each failure into exactly one category:
+
+| Category | Signal | Example |
+|---|---|---|
+| **price_objection** | Customer left because price was too high | "That's too expensive for me, thanks anyway" |
+| **discount_violation** | Seller gave more than allowed discount | Sold iPhone 15 at $830 (24% off) |
+| **shipping_violation** | Wrong shipping price or promise | Free shipping on $599 item |
+| **spec_fabrication** | Seller invented specs not in catalog | "It has 16GB RAM" (not in catalog) |
+| **stock_violation** | Promised product that's out of stock | Offered product after stock hit 0 |
+| **warranty_violation** | Extended or modified warranty | "I can offer 24 months warranty" |
+| **installment_violation** | Offered installments | "You can pay in 3 installments" |
+| **missed_alternative** | Didn't offer cheaper product when customer couldn't afford | Customer left without being shown budget options |
+| **passive_close** | Customer was interested but seller didn't close | Customer said "interesting" and seller didn't ask for the sale |
+| **aggressive_tone** | Seller pushed too hard and scared customer | Customer felt pressured and left |
+| **off_catalog** | Offered product not in catalog | "We also have the iPhone 16" |
+| **no_close_attempt** | Conversation ended without any closing attempt | Conversation fizzled out |
+
+Count how many conversations fall into each category.
+
+#### Step 3: Prioritize by profit impact
+
+Estimate the profit impact of fixing each failure mode:
+
+```
+impact = count × average_margin_of_relevant_product
+```
+
+Pick the failure mode with the highest estimated impact. That's what you fix.
+
+#### Step 4: Write ONE specific change
+
+- State the failure mode you're targeting
+- State the exact change to `workspace/seller_prompt.md`
+- State your prediction: "This should increase/decrease [metric] by approximately [X]"
+
+Do NOT change multiple things. One change per iteration.
+
+#### Step 5: After the next experiment, verify your prediction
+
+- Did the targeted failure mode decrease?
+- Did any new failure modes appear (regression)?
+- Was your profit prediction directionally correct?
+
+If the change caused a regression in another area, rollback and try a different approach to the same problem.
+
+#### Analysis format in commit messages
+
+When committing results (whether improved or discarded), include the failure mode classification in the commit message:
+
+```
+profit: $X -> $Y | sales: A/B | model: name | change: description
+  target: [failure_mode] (was N cases, now M)
+  regression: [none | failure_mode increased from N to M]
+```
+
+## Rules
 
 ### NEVER STOP
 
-Una vez que el loop empezó, **NO pares a preguntar**. No preguntes "¿sigo?", "¿está bien?", "¿quieres que continúe?". El usuario puede estar durmiendo o lejos de la computadora. Vos corrés el loop indefinidamente hasta que te interrumpan manualmente.
+Once the loop starts, **DO NOT stop to ask**. Don't ask "should I continue?", "is this okay?", "do you want me to keep going?". The user may be asleep or away from the computer. You run the loop indefinitely until manually interrupted.
 
-Si te quedás sin ideas para mejorar el prompt:
-- Releé las conversaciones individuales (no solo el summary).
-- Probá cambios más radicales en el tono o la estrategia.
-- Combiná ideas de experimentos anteriores que casi funcionaron.
-- Probá otro modelo.
+If you run out of ideas to improve the prompt:
+- Re-read individual conversations (not just the summary).
+- Try more radical changes in tone or strategy.
+- Combine ideas from previous experiments that almost worked.
+- Try another model.
 
-### Errores
+### Errors
 
-- Si un experimento falla (error de LLM, timeout): logueá el error, reintenté una vez.
-- Si falla dos veces seguidas: cambiá algo (reducí consumers, revisá la conexión).
-- Si el modelo no responde: verificá la conexión con `curl` al endpoint.
+- If an experiment fails (LLM error, timeout): log the error, retry once.
+- If it fails twice in a row: change something (reduce consumers, check the connection).
+- If the model isn't responding: verify the connection with `curl` to the endpoint.
 
-### Formato de commits
+### Commit format
 
 ```
-profit: $X | sales: Y/Z | model: nombre | change: qué se cambió y por qué
+profit: $X | sales: Y/Z | model: name | change: what was changed and why
 ```
 
-Ejemplos:
+Examples:
 ```
-profit: $1,250 -> $1,800 | sales: 14/20 | model: llama3 | change: agregué instrucción de ofrecer alternativas cuando no hay stock
-descartado: profit $1,100 (baseline $1,800) | model: llama3 | change: tono más agresivo en cierre — bajó conversión
+profit: $1,250 -> $1,800 | sales: 14/20 | model: llama3 | change: added instruction to offer alternatives when out of stock
+discarded: profit $1,100 (baseline $1,800) | model: llama3 | change: more aggressive closing tone — lowered conversion
 ```
