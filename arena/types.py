@@ -22,6 +22,7 @@ class Conversation:
     turns: list[Turn] = field(default_factory=list)
     outcome: str = "pending"  # "sale", "no_sale", "timeout"
     sale_details: Optional[dict] = None  # {"product": ..., "price": ..., "cost": ...}
+    purchase_intent: Optional[dict] = None  # raw consumer JSON when status == "purchase"
     status: str = "active"  # "active", "finished"
 
     @property

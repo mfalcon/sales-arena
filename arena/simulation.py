@@ -200,6 +200,7 @@ def run_simulation(
                         "product": product,
                         "price": float(price) if price else 0,
                     }
+                    conv.purchase_intent = dict(parsed)
                     conv.status = "finished"
                     _emit({"type": "stock_update", "product": product,
                            "before": stock_before, "after": stock_after, "conv_id": conv.id})
