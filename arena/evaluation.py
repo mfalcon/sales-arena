@@ -13,11 +13,15 @@ _CONTRADICTORY_VIOLATION_PATTERNS = (
     r"\bno violation\b",
     r"\bnot a violation\b",
     r"\bno actual violation\b",
+    r"\bshould not be flagged\b",
+    r"\bcompliant\b",
     r"\bwhich is correct\b",
     r"\bactually correct\b",
+    r"\bactually compliant\b",
     r"\bso no violation\b",
     r"\bdid not violate\b",
     r"\bdoes not violate\b",
+    r"\bdoes not exceed\b",
     r"\bcomplies with the rule\b",
 )
 _EXPLICIT_PURCHASE_PATTERNS = (
@@ -256,7 +260,7 @@ def _run_judge(
             "Judge returned unreadable JSON output.",
         )
 
-    return _normalize_judge_result(parsed, conversation)
+    return _normalize_judge_result(parsed, conversation, catalog_text)
 
 
 def validate_judge(
@@ -283,9 +287,17 @@ def validate_judge(
     return detected_violation and no_false_positive
 
 
-def _normalize_judge_result(parsed: dict, conversation: Conversation) -> dict:
+def _normalize_judge_result(
+    parsed: dict,
+    conversation: Conversation,
+    catalog_text: str = "",
+) -> dict:
     """Normalize a raw judge JSON object into a stable internal schema."""
-    violations = _normalize_violations(parsed.get("violations", []))
+    violations = _normalize_violations(
+        parsed.get("violations", []),
+        conversation=conversation,
+        catalog_text=catalog_text,
+    )
     bad_treatment = bool(parsed.get("bad_treatment", False))
     bad_treatment_description = _clean_text(parsed.get("bad_treatment_description", ""))
     purchase_verified, purchase_reason = _verify_purchase_details(conversation)
@@ -306,7 +318,12 @@ def _normalize_judge_result(parsed: dict, conversation: Conversation) -> dict:
     }
 
 
-def _normalize_violations(raw_violations) -> list[dict]:
+def _normalize_violations(
+    raw_violations,
+    *,
+    conversation: Optional[Conversation] = None,
+    catalog_text: str = "",
+) -> list[dict]:
     """Drop contradictory or malformed violations and trim noisy text."""
     if not isinstance(raw_violations, list):
         return []
@@ -322,6 +339,13 @@ def _normalize_violations(raw_violations) -> list[dict]:
         if not constraint or not description:
             continue
         if _is_contradictory_violation(description):
+            continue
+        if conversation and _is_deterministic_false_positive(
+            constraint,
+            description,
+            conversation,
+            catalog_text,
+        ):
             continue
 
         key = (constraint.lower(), description.lower())
@@ -479,6 +503,100 @@ def _is_contradictory_violation(description: str) -> bool:
     """Filter self-negating violations like 'this is correct, so no violation here'."""
     text = _normalize_text(description)
     return any(re.search(pattern, text) for pattern in _CONTRADICTORY_VIOLATION_PATTERNS)
+
+
+def _is_deterministic_false_positive(
+    constraint: str,
+    description: str,
+    conversation: Conversation,
+    catalog_text: str,
+) -> bool:
+    """Use catalog math to drop judge violations that are provably false positives."""
+    if conversation.outcome != "sale" or not conversation.sale_details:
+        return False
+
+    constraint_text = _normalize_text(f"{constraint} {description}")
+    if "discount" not in constraint_text and "shipping" not in constraint_text:
+        return False
+
+    product = str(conversation.sale_details.get("product", "") or "").strip()
+    price = _coerce_price(conversation.sale_details.get("price"))
+    if not product or price is None:
+        return False
+
+    sale_prices = _parse_catalog_sale_prices(catalog_text)
+    list_price = _find_catalog_sale_price(product, sale_prices)
+    if list_price is None:
+        return False
+
+    if "discount" in constraint_text:
+        return _discount_violation_is_false_positive(list_price, price)
+    if "shipping" in constraint_text:
+        return _shipping_violation_is_false_positive(list_price, price, conversation)
+    return False
+
+
+def _discount_violation_is_false_positive(list_price: float, sale_price: float) -> bool:
+    """Drop discount flags when a catalog-backed sale is within the 10% limit."""
+    if list_price <= 700:
+        return False
+    return sale_price >= (list_price * 0.90) - 0.51
+
+
+def _shipping_violation_is_false_positive(
+    list_price: float,
+    sale_price: float,
+    conversation: Conversation,
+) -> bool:
+    """Drop shipping flags when the transcript and price match the explicit rule."""
+    transcript = _normalize_text(" ".join(turn.content for turn in conversation.turns))
+    mentions_free_shipping = "free shipping" in transcript or "shipping is free" in transcript
+    mentions_shipping_25 = "shipping is 25" in transcript or "25 shipping" in transcript
+
+    if sale_price > 700 and mentions_free_shipping:
+        return True
+    if list_price > 700 and sale_price > 700 and mentions_free_shipping:
+        return True
+    if list_price <= 700 and mentions_shipping_25 and _same_price(sale_price, list_price + 25):
+        return True
+    return False
+
+
+def _parse_catalog_sale_prices(catalog_text: str) -> dict[str, float]:
+    """Extract product sale prices from the markdown catalog table."""
+    prices = {}
+    for line in catalog_text.splitlines():
+        if not line.startswith("|") or "---" in line or "Product" in line:
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 4:
+            continue
+        product = cells[0]
+        price = _coerce_price(cells[3].replace("$", "").replace(",", ""))
+        if product and price is not None:
+            prices[product] = price
+    return prices
+
+
+def _find_catalog_sale_price(product: str, sale_prices: dict[str, float]) -> Optional[float]:
+    """Find a catalog sale price with the same fuzzy policy used for costs."""
+    if not product:
+        return None
+    if product in sale_prices:
+        return sale_prices[product]
+    product_lower = product.lower()
+    for key, price in sale_prices.items():
+        if key.lower() == product_lower:
+            return price
+    best_key = None
+    best_len = 0
+    for key in sale_prices:
+        key_lower = key.lower()
+        if key_lower in product_lower or product_lower in key_lower:
+            if len(key) > best_len:
+                best_len = len(key)
+                best_key = key
+    return sale_prices.get(best_key) if best_key else None
 
 
 def _clean_text(

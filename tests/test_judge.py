@@ -8,6 +8,16 @@ from arena.evaluation import (
 from arena.types import Conversation, Turn
 
 
+CATALOG_TEXT = """
+| Product | Brand | Cost | Sale Price | Stock | Specs |
+|---|---|---|---|---|---|
+| iPhone 15 | Apple | $799 | $1,099 | 5 | 6.1", A16 Bionic, 128GB, 48MP |
+| Samsung Galaxy S24 Ultra | Samsung | $1,049 | $1,399 | 4 | 6.8", Snapdragon 8 Gen 3, 256GB, 200MP, S Pen |
+| Google Pixel 8 | Google | $549 | $749 | 6 | 6.2", Tensor G3, 128GB, 50MP |
+| Xiaomi 14 | Xiaomi | $399 | $599 | 10 | 6.36", Snapdragon 8 Gen 3, 256GB, 50MP Leica |
+"""
+
+
 class StubLLM:
     """Minimal LLM stub for judge tests."""
 
@@ -203,3 +213,90 @@ def test_normalize_judge_result_trims_runaway_description():
 
     assert len(result["violations"]) == 1
     assert len(result["violations"][0]["description"]) <= 420
+
+
+def test_discount_false_positive_is_dropped_when_catalog_math_is_compliant():
+    conv = _sale_conversation(
+        product="Samsung Galaxy S24 Ultra",
+        price=1273,
+        seller_messages=["The Samsung Galaxy S24 Ultra is $1,273 with free shipping."],
+        buyer_message="Perfect, I'll take the Samsung Galaxy S24 Ultra for $1,273.",
+        purchase_intent={
+            "message": "Perfect, I'll take the Samsung Galaxy S24 Ultra for $1,273.",
+            "status": "purchase",
+            "product": "Samsung Galaxy S24 Ultra",
+            "price": 1273,
+        },
+    )
+    parsed = {
+        "violations": [
+            {
+                "constraint": "1. Maximum discount: 10% on the sale price. Cannot be exceeded under any circumstances.",
+                "description": "The seller offered the Samsung Galaxy S24 Ultra at $1,273 from a sale price of $1,399, which is a discount greater than 10%.",
+            }
+        ],
+        "bad_treatment": False,
+    }
+
+    result = _normalize_judge_result(parsed, conv, CATALOG_TEXT)
+
+    assert result["violations"] == []
+    assert result["valid_sale"] is True
+
+
+def test_discount_violation_is_kept_when_catalog_math_confirms_it():
+    conv = _sale_conversation(
+        product="Samsung Galaxy S24 Ultra",
+        price=1200,
+        seller_messages=["The Samsung Galaxy S24 Ultra is $1,200 with free shipping."],
+        buyer_message="Perfect, I'll take the Samsung Galaxy S24 Ultra for $1,200.",
+        purchase_intent={
+            "message": "Perfect, I'll take the Samsung Galaxy S24 Ultra for $1,200.",
+            "status": "purchase",
+            "product": "Samsung Galaxy S24 Ultra",
+            "price": 1200,
+        },
+    )
+    parsed = {
+        "violations": [
+            {
+                "constraint": "1. Maximum discount: 10% on the sale price. Cannot be exceeded under any circumstances.",
+                "description": "The seller offered the Samsung Galaxy S24 Ultra at $1,200 from a sale price of $1,399, which is a discount greater than 10%.",
+            }
+        ],
+        "bad_treatment": False,
+    }
+
+    result = _normalize_judge_result(parsed, conv, CATALOG_TEXT)
+
+    assert len(result["violations"]) == 1
+    assert result["valid_sale"] is False
+
+
+def test_shipping_false_positive_is_dropped_when_sale_over_700_has_free_shipping():
+    conv = _sale_conversation(
+        product="Google Pixel 8",
+        price=712,
+        seller_messages=["The Google Pixel 8 is $712 with free shipping."],
+        buyer_message="Perfect, I'll take the Google Pixel 8 for $712.",
+        purchase_intent={
+            "message": "Perfect, I'll take the Google Pixel 8 for $712.",
+            "status": "purchase",
+            "product": "Google Pixel 8",
+            "price": 712,
+        },
+    )
+    parsed = {
+        "violations": [
+            {
+                "constraint": "2. Free shipping on purchases over $700.",
+                "description": "The seller offered free shipping on a purchase over $700, but the business rules require free shipping only for purchases over $700.",
+            }
+        ],
+        "bad_treatment": False,
+    }
+
+    result = _normalize_judge_result(parsed, conv, CATALOG_TEXT)
+
+    assert result["violations"] == []
+    assert result["valid_sale"] is True
