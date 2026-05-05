@@ -1,57 +1,60 @@
 # Sales Arena
 
-**Entrená tu agente de ventas antes de mandarlo a producción.**
+**Train your sales agent before sending it to production.**
 
-Sales Arena es un entrenador de agentes de ventas. Traés tu prompt de vendedor, tu catálogo y tus reglas de negocio, y Sales Arena lo pone a vender contra consumidores simulados con distintos perfiles. Después evalúa el desempeño e itera automáticamente para optimizar profit.
+Sales Arena is a sales-agent trainer. You bring your seller prompt, your catalog, and your business rules, and Sales Arena puts it to sell against simulated consumers with different profiles. Then it evaluates performance and iterates automatically to optimize profit.
 
 ## Quick Start
 
-### 1. Instalar
+### 1. Install
 
-Requiere [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
+Requires [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
 
 ```bash
 uv sync
 ```
 
-### 2. Setup con tu agente
+### 2. Setup with your agent
 
-Dále `program.md` a tu agente (Claude Code, Codex, etc.) y dejá que te guíe por el setup. El agente te va a pedir tu catálogo, reglas de negocio, y un prompt inicial.
+Hand `program.md` to your agent (Claude Code, Codex, etc.) and let it walk you through setup. The agent will ask for your catalog, business rules, and an initial prompt.
 
-### 3. Correr
+### 3. Run
 
 ```bash
 uv run python run.py simulate
 ```
 
-### 4. Iterar
+### 4. Iterate
 
-El agente lee los resultados, ajusta el prompt, y vuelve a correr. Podés dejarlo iterando toda la noche.
+The agent reads the results, tweaks the prompt, and runs again. You can leave it iterating overnight.
 
-## Cómo funciona
+## How it works
 
-1. **Simulación**: 20 consumidores con distintos perfiles (decidido, cazador de ofertas, indeciso, exigente, apurado, curioso) chatean con tu vendedor en paralelo.
-2. **Evaluación**: Un juez LLM verifica que no se violaron reglas de negocio. Un analista LLM da feedback cualitativo.
-3. **Métrica**: Profit total de ventas válidas (las que no violaron constraints).
-4. **Iteración**: El agente ajusta el prompt basándose en los resultados y repite.
+1. **Simulation**: 20 consumers with different profiles (decisive, bargain hunter, indecisive, demanding, rushed, browser) chat with your seller in parallel.
+2. **Evaluation**: An LLM judge checks that no business rules were broken. An analyst LLM gives qualitative feedback.
+3. **Metric**: Total profit from valid sales (those that didn't violate constraints).
+4. **Iteration**: The agent adjusts the prompt based on results and repeats.
 
-## Estructura
+See [`docs/loop-macro.md`](docs/loop-macro.md) for a diagram of the optimization loop.
+
+## Layout
 
 ```
 sales-arena/
   run.py              # CLI
-  program.md          # Instrucciones para el agente orquestador
-  arena/              # Código core
-  workspace/          # Tu catálogo, constraints, prompt (lo crea el agente)
-  experiments/        # Resultados de cada experimento
+  program.md          # Instructions for the orchestrator agent
+  arena/              # Core code
+  workspace/          # Your catalog, constraints, prompt (created by the agent)
+  experiments/        # Results from each experiment
+  docs/               # Diagrams and notes
 ```
 
-## Requisitos
+## Requirements
 
 - Python 3.11+
-- Un LLM compatible con API OpenAI (LM Studio, Ollama, OpenAI, Anthropic vía proxy, etc.)
+- An LLM compatible with the OpenAI API (LM Studio, Ollama, OpenAI, Anthropic via proxy, etc.)
 
-## Inspiración
+## Inspiration
 
-- [autoresearch](https://github.com/karpathy/autoresearch) de Karpathy — el loop de iteración automática
-- [The Loop Is Only as Good as the Metric](https://www.distributedthoughts.org/2026-03-16-the-loop-is-only-as-good-as-the-metric/) — la importancia de métricas claras
+- [autoresearch](https://github.com/karpathy/autoresearch) by Karpathy — the automatic iteration loop
+- [The Loop Is Only as Good as the Metric](https://www.distributedthoughts.org/2026-03-16-the-loop-is-only-as-good-as-the-metric/) — the importance of clear metrics
