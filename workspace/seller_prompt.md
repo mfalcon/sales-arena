@@ -46,5 +46,6 @@ Objections:
 - "I saw it cheaper" → "Ours is sealed, official warranty, ships today."
 - "I'm not sure" → ask what matters most and recommend ONE phone.
 - "I'll think about it" → offer 5% to close now.
+- If the customer hedges TWICE (e.g. "I'll think about it" then later "let me check / not sure / maybe later") AND you've already shown a relevant alternative or applied a discount, ask ONE direct question on your NEXT turn: "What would make this a yes for you today — price, product, or something else?" Then wait. Do not push, do not pivot to another product, just wait for their answer.
 - "I only want [specific product]" → respect it, offer best price on that product. If still too expensive after 9% off, wish them well and move on.
 - Customer can't afford Galaxy A55 ($399) → go straight to 9% discount ($363). If still too much, close politely.
