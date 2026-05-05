@@ -22,6 +22,11 @@ _CONTRADICTORY_VIOLATION_PATTERNS = (
     r"\bdid not violate\b",
     r"\bdoes not violate\b",
     r"\bdoes not exceed\b",
+    r"\bwithin the limit\b",
+    r"\bwithin allowed\b",
+    r"\bwithin the allowed\b",
+    r"\bunder the 10\b",
+    r"\bunder 10\b",
     r"\bcomplies with the rule\b",
 )
 _EXPLICIT_PURCHASE_PATTERNS = (
@@ -31,6 +36,9 @@ _EXPLICIT_PURCHASE_PATTERNS = (
     r"\bi ll pay\b",
     r"\bi will pay\b",
     r"\blet'?s do this\b",
+    r"\blet s do it\b",
+    r"\bworks for me\b",
+    r"\bsounds good\b",
     r"\bgo ahead\b",
     r"\bi want to buy\b",
     r"\bi want it\b",
@@ -494,15 +502,34 @@ def _is_explicit_purchase_message(message: str) -> bool:
         return False
     if any(re.search(pattern, text) for pattern in _CONDITIONAL_PURCHASE_PATTERNS):
         return False
-    if "?" in message:
+    has_explicit_purchase = any(re.search(pattern, text) for pattern in _EXPLICIT_PURCHASE_PATTERNS)
+    if "?" in message and not _has_only_logistics_question(text):
         return False
-    return any(re.search(pattern, text) for pattern in _EXPLICIT_PURCHASE_PATTERNS)
+    return has_explicit_purchase
 
 
 def _is_contradictory_violation(description: str) -> bool:
     """Filter self-negating violations like 'this is correct, so no violation here'."""
     text = _normalize_text(description)
     return any(re.search(pattern, text) for pattern in _CONTRADICTORY_VIOLATION_PATTERNS)
+
+
+def _has_only_logistics_question(text: str) -> bool:
+    """Allow explicit closes that only ask how to complete payment/order logistics."""
+    logistics_patterns = (
+        r"\bhow do i pay\b",
+        r"\bhow can i pay\b",
+        r"\bwhere do i pay\b",
+        r"\bwhere should i pay\b",
+        r"\bhow do i send payment\b",
+        r"\bwhere do i send payment\b",
+        r"\bpayment link\b",
+        r"\bpayment details\b",
+        r"\bwhat'?s next\b",
+        r"\bwhat is next\b",
+        r"\bnext steps\b",
+    )
+    return any(re.search(pattern, text) for pattern in logistics_patterns)
 
 
 def _is_deterministic_false_positive(
@@ -538,8 +565,6 @@ def _is_deterministic_false_positive(
 
 def _discount_violation_is_false_positive(list_price: float, sale_price: float) -> bool:
     """Drop discount flags when a catalog-backed sale is within the 10% limit."""
-    if list_price <= 700:
-        return False
     return sale_price >= (list_price * 0.90) - 0.51
 
 
@@ -550,8 +575,37 @@ def _shipping_violation_is_false_positive(
 ) -> bool:
     """Drop shipping flags when the transcript and price match the explicit rule."""
     transcript = _normalize_text(" ".join(turn.content for turn in conversation.turns))
-    mentions_free_shipping = "free shipping" in transcript or "shipping is free" in transcript
-    mentions_shipping_25 = "shipping is 25" in transcript or "25 shipping" in transcript
+    mentions_free_shipping = any(
+        phrase in transcript
+        for phrase in (
+            "free shipping",
+            "shipping is free",
+            "shipping included",
+            "shipping is included",
+            "ships free",
+            "ship free",
+            "shipping on us",
+            "shipping is on us",
+            "no shipping fee",
+            "no shipping cost",
+            "no extra shipping",
+            "free delivery",
+            "delivery is free",
+        )
+    )
+    mentions_shipping_25 = any(
+        phrase in transcript
+        for phrase in (
+            "shipping is 25",
+            "25 shipping",
+            "25 for shipping",
+            "25 shipping fee",
+            "shipping fee is 25",
+            "shipping costs 25",
+            "599 plus 25",
+            "599 25 shipping",
+        )
+    )
 
     if sale_price > 700 and mentions_free_shipping:
         return True

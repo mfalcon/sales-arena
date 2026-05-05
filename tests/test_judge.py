@@ -138,6 +138,66 @@ def test_purchase_verification_rejects_conditional_close():
     assert "conditional" in reason.lower()
 
 
+def test_purchase_verification_accepts_close_with_logistics_question():
+    conv = _sale_conversation(
+        product="OnePlus 12",
+        price=772,
+        seller_messages=["The OnePlus 12 is $772 with free shipping."],
+        buyer_message="Awesome, $772 works for me! Let's do it. How do I pay?",
+        purchase_intent={
+            "message": "Awesome, $772 works for me! Let's do it. How do I pay?",
+            "status": "purchase",
+            "product": "OnePlus 12",
+            "price": 772,
+        },
+    )
+
+    purchase_ok, reason = _verify_purchase_details(conv)
+
+    assert purchase_ok is True
+    assert reason == ""
+
+
+def test_purchase_verification_accepts_works_for_me_lets_do_it_close():
+    conv = _sale_conversation(
+        product="Xiaomi 14",
+        price=624,
+        seller_messages=["The Xiaomi 14 is $599 plus $25 shipping."],
+        buyer_message="Okay, I think I'll go with the Xiaomi 14 then. $599 + $25 shipping works for me. Let's do it!",
+        purchase_intent={
+            "message": "Okay, I think I'll go with the Xiaomi 14 then. $599 + $25 shipping works for me. Let's do it!",
+            "status": "purchase",
+            "product": "Xiaomi 14",
+            "price": 624,
+        },
+    )
+
+    purchase_ok, reason = _verify_purchase_details(conv)
+
+    assert purchase_ok is True
+    assert reason == ""
+
+
+def test_purchase_verification_rejects_close_with_product_question():
+    conv = _sale_conversation(
+        product="Xiaomi 14",
+        price=624,
+        seller_messages=["The Xiaomi 14 is $599 plus $25 shipping."],
+        buyer_message="The price works for me, let's do it. Can you confirm it is unlocked?",
+        purchase_intent={
+            "message": "The price works for me, let's do it. Can you confirm it is unlocked?",
+            "status": "purchase",
+            "product": "Xiaomi 14",
+            "price": 624,
+        },
+    )
+
+    purchase_ok, reason = _verify_purchase_details(conv)
+
+    assert purchase_ok is False
+    assert "conditional" in reason.lower()
+
+
 def test_run_judge_fails_closed_on_unreadable_json():
     conv = _sale_conversation(
         product="Google Pixel 8",
@@ -244,6 +304,35 @@ def test_discount_false_positive_is_dropped_when_catalog_math_is_compliant():
     assert result["valid_sale"] is True
 
 
+def test_discount_false_positive_is_dropped_for_sub_700_product():
+    conv = _sale_conversation(
+        product="Xiaomi 14",
+        price=545,
+        seller_messages=["The Xiaomi 14 is $545 plus $25 shipping."],
+        buyer_message="Perfect, I'll take the Xiaomi 14 for $545 plus $25 shipping.",
+        purchase_intent={
+            "message": "Perfect, I'll take the Xiaomi 14 for $545 plus $25 shipping.",
+            "status": "purchase",
+            "product": "Xiaomi 14",
+            "price": 545,
+        },
+    )
+    parsed = {
+        "violations": [
+            {
+                "constraint": "1. Maximum discount: 10% on the sale price. Cannot be exceeded under any circumstances.",
+                "description": "The seller offered the Xiaomi 14 at $545 from a sale price of $599, which is a discount greater than 10%.",
+            }
+        ],
+        "bad_treatment": False,
+    }
+
+    result = _normalize_judge_result(parsed, conv, CATALOG_TEXT)
+
+    assert result["violations"] == []
+    assert result["valid_sale"] is True
+
+
 def test_discount_violation_is_kept_when_catalog_math_confirms_it():
     conv = _sale_conversation(
         product="Samsung Galaxy S24 Ultra",
@@ -291,6 +380,35 @@ def test_shipping_false_positive_is_dropped_when_sale_over_700_has_free_shipping
             {
                 "constraint": "2. Free shipping on purchases over $700.",
                 "description": "The seller offered free shipping on a purchase over $700, but the business rules require free shipping only for purchases over $700.",
+            }
+        ],
+        "bad_treatment": False,
+    }
+
+    result = _normalize_judge_result(parsed, conv, CATALOG_TEXT)
+
+    assert result["violations"] == []
+    assert result["valid_sale"] is True
+
+
+def test_shipping_false_positive_accepts_free_shipping_synonyms():
+    conv = _sale_conversation(
+        product="Google Pixel 8",
+        price=712,
+        seller_messages=["The Google Pixel 8 is $712, shipping is on us."],
+        buyer_message="Perfect, I'll take the Google Pixel 8 for $712.",
+        purchase_intent={
+            "message": "Perfect, I'll take the Google Pixel 8 for $712.",
+            "status": "purchase",
+            "product": "Google Pixel 8",
+            "price": 712,
+        },
+    )
+    parsed = {
+        "violations": [
+            {
+                "constraint": "2. Free shipping on purchases over $700.",
+                "description": "The seller offered free shipping on a purchase over $700.",
             }
         ],
         "bad_treatment": False,
