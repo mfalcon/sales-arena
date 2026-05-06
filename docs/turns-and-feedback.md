@@ -7,14 +7,14 @@ For the high-level temporal flow, see [`loop-macro.md`](loop-macro.md). For the 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant ORC as 🤖 Orquestador
-    participant ENG as ⚙️ run.py simulate
-    participant SLLM as 🏪 Seller LLM
-    participant C1 as 🛒 C01 (decisive)
-    participant C2 as 🛒 C02 (browser)
-    participant CN as 🛒 C03..C20<br/>(otros 18 perfiles)
-    participant STOCK as 📦 Stock vivo
-    participant JLLM as ⚖️ Judge LLM
+    participant ORC as Orquestador
+    participant ENG as run.py simulate
+    participant SLLM as Seller LLM
+    participant C1 as C01 (decisive)
+    participant C2 as C02 (browser)
+    participant CN as C03..C20<br/>(otros 18 perfiles)
+    participant STOCK as Stock vivo
+    participant JLLM as Judge LLM
 
     ORC->>ENG: simulate (con seller_prompt actual)
 

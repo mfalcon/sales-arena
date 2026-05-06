@@ -5,7 +5,7 @@ This shows the **system architecture** — who owns which files, how the LLMs ar
 ```mermaid
 flowchart TB
     %% USER ZONE
-    subgraph USR["👤 USUARIO · define el negocio (read-only para el agente)"]
+    subgraph USR["USUARIO · define el negocio (read-only para el agente)"]
         direction LR
         CAT[catalog.md<br/><sub>productos · specs</sub>]
         CON[constraints.md<br/><sub>reglas de negocio</sub>]
@@ -13,28 +13,28 @@ flowchart TB
     end
 
     %% ORCHESTRATOR
-    subgraph ORC["🤖 ORQUESTADOR · Claude Code / Codex (loop driver)"]
+    subgraph ORC["ORQUESTADOR · Claude Code / Codex (loop driver)"]
         direction TB
         AGENT[loop driver]
         PROG[program.md<br/><sub>playbook · Phase 1-5</sub>]
-        GUARD[CLAUDE.md guardrails<br/><sub>stop si: 3 sin mejora · ↓90% · count · judge unreliable</sub>]
+        GUARD[CLAUDE.md guardrails<br/><sub>stop si: 3 sin mejora · profit cae 90% · count · judge unreliable</sub>]
         PROG -.-> AGENT
         GUARD -.-> AGENT
     end
 
     %% WRITABLE
-    SP[✏️ seller_prompt.md<br/><sub>variable a optimizar</sub>]
+    SP[seller_prompt.md<br/><sub>variable a optimizar</sub>]
 
     %% ENGINE
-    subgraph ENG["⚙️ run.py simulate"]
+    subgraph ENG["run.py simulate"]
         direction LR
         SIM[simulation engine<br/><sub>20 conv round-robin pseudo-paralelo</sub>]
-        STOCK[(📦 stock vivo<br/>compartido)]
-        VER[🐍 Python regex verifier<br/><sub>_verify_purchase_details</sub>]
+        STOCK[(stock vivo<br/>compartido)]
+        VER[Python regex verifier<br/><sub>_verify_purchase_details</sub>]
     end
 
     %% LLMs
-    subgraph LLM["🧠 LLMs (3 roles configurables independientemente)"]
+    subgraph LLM["LLMs (3 roles configurables independientemente)"]
         direction LR
         SLLM[seller<br/><sub>1 modelo · 1 prompt · temp 0.7</sub>]
         CLLM[consumers<br/><sub>1 modelo · 6 perfiles · 20 instancias · temp 0.7</sub>]
@@ -42,7 +42,7 @@ flowchart TB
     end
 
     %% OUTPUT
-    subgraph OUT["📁 experiments/&lt;ts&gt;/"]
+    subgraph OUT["experiments/&lt;ts&gt;/"]
         direction LR
         SUM[summary.md<br/><sub>profit · sales · violations</sub>]
         CONV[conversations/*.md<br/><sub>20 transcripts</sub>]
@@ -50,7 +50,7 @@ flowchart TB
     end
 
     %% MEMORY
-    GIT[💾 git<br/><sub>commits = baselines · rollback al best</sub>]
+    GIT[git<br/><sub>commits = baselines · rollback al best</sub>]
 
     %% FLOWS
     USR --> ENG
@@ -94,12 +94,12 @@ flowchart TB
 
 | Region | Files / components | Who modifies | Notes |
 |---|---|---|---|
-| 👤 User | `catalog.md`, `constraints.md`, `config.yaml` | User only | Define the business. Agent reads but does not modify (Phase 4 exception: agent may change `config.yaml → model.name` to compare models). |
-| 🤖 Orchestrator | `program.md`, `CLAUDE.md` | User (durable) | The agent's playbook and stop conditions. Read by the agent at the start of each session. |
-| ✏️ Writable | `workspace/seller_prompt.md` | Agent | The single variable being optimized. One change per iteration. |
-| ⚙️ Engine | `arena/`, `run.py` | Source — never modified during the loop | The simulator + judge harness. Modifying these is harness engineering, not prompt engineering. |
-| 📁 Output | `experiments/<ts>/` | Engine writes, agent reads | Each iteration produces an immutable experiment directory. |
-| 💾 Memory | `git` | Agent (commits and rollbacks) | The commit history IS the optimization trace. Rollback to the best commit if profit regresses. |
+| User | `catalog.md`, `constraints.md`, `config.yaml` | User only | Define the business. Agent reads but does not modify (Phase 4 exception: agent may change `config.yaml → model.name` to compare models). |
+| Orchestrator | `program.md`, `CLAUDE.md` | User (durable) | The agent's playbook and stop conditions. Read by the agent at the start of each session. |
+| Writable | `workspace/seller_prompt.md` | Agent | The single variable being optimized. One change per iteration. |
+| Engine | `arena/`, `run.py` | Source — never modified during the loop | The simulator + judge harness. Modifying these is harness engineering, not prompt engineering. |
+| Output | `experiments/<ts>/` | Engine writes, agent reads | Each iteration produces an immutable experiment directory. |
+| Memory | `git` | Agent (commits and rollbacks) | The commit history IS the optimization trace. Rollback to the best commit if profit regresses. |
 
 ## LLM topology
 

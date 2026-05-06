@@ -4,20 +4,20 @@
 flowchart TD
     U([Usuario define el negocio<br/>catálogo · reglas · prompt inicial]) --> ORQ
 
-    ORQ{{"🤖 Agente orquestador<br/>(Claude Code / Codex)"}}
+    ORQ{{"Agente orquestador<br/>(Claude Code / Codex)"}}
 
     ORQ -->|"1. edita UN cambio"| PR[/seller_prompt.md/]
-    PR -->|"2. corre"| SIM["⚙️ simulate<br/>20 consumidores × 10 turnos"]
+    PR -->|"2. corre"| SIM["simulate<br/>20 consumidores × 10 turnos"]
     SIM -->|"3. genera"| EXP[/"experiments/&lt;ts&gt;/<br/>profit · ventas · violaciones"/]
     EXP -->|"4. analiza"| ORQ
 
     ORQ --> Q{¿profit mejoró?}
-    Q -->|✅ sí| OK["git commit<br/>nuevo baseline"]
-    Q -->|❌ no| BAD["git reset --hard<br/>vuelve al mejor"]
+    Q -->|sí| OK["git commit<br/>nuevo baseline"]
+    Q -->|no| BAD["git reset --hard<br/>vuelve al mejor"]
     OK -.-> ORQ
     BAD -.-> ORQ
 
-    ORQ -.->|stop| G["🛑 guardarrails<br/>· N iteraciones<br/>· 3 sin mejora<br/>· profit cae &gt;90%<br/>· judge poco confiable"]
+    ORQ -.->|stop| G["guardarrails<br/>· N iteraciones<br/>· 3 sin mejora<br/>· profit cae &gt;90%<br/>· judge poco confiable"]
 
     classDef user fill:#e8f4f8,stroke:#2c7a8c,stroke-width:2px
     classDef agent fill:#fff4e6,stroke:#d97706,stroke-width:2px
