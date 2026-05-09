@@ -64,9 +64,14 @@ _HEDGE_PATTERNS = (
     r"\bi guess\b",
     r"\bi suppose\b",
     r"\bperhaps\b",
-    r"\bbut\b",
-    r"\bhowever\b",
-    r"\bthough\b",
+    # Specific contrastive uncertainty — not every "but" is hedging.
+    r"\bbut (?:can|could|would|will) you\b",
+    r"\bbut (?:i|we) (?:need|want|have to|might|may|should)\b",
+    r"\bbut (?:let|maybe|first|wait|hold|actually|hmm)\b",
+    r"\bbut not sure\b",
+    r"\bbut i'?m not\b",
+    r"\bbut before\b",
+    r"\bbut only if\b",
 )
 _CONDITIONAL_PURCHASE_PATTERNS = (
     r"\bif so\b",
@@ -493,7 +498,7 @@ def _verify_purchase_details(conversation: Conversation, rules: Optional[dict] =
             return False, f"Stored purchase intent has status '{status}', not 'purchase'."
 
         intent_product = str(purchase_intent.get("product", "") or "").strip()
-        if intent_product and _normalize_text(intent_product) != _normalize_text(product):
+        if intent_product and not _products_match(intent_product, product):
             return False, f"Purchase intent product '{intent_product}' does not match sale_details '{product}'."
 
         intent_price = _coerce_price(purchase_intent.get("price"))
@@ -506,6 +511,18 @@ def _verify_purchase_details(conversation: Conversation, rules: Optional[dict] =
         return False, f"Final price ${price:.2f} is not clearly supported by the transcript."
 
     return True, ""
+
+
+def _products_match(a: str, b: str) -> bool:
+    """Two product strings refer to the same item if they map to a common canonical key.
+
+    Used to compare a free-form purchase_intent product against a canonicalized
+    sale_details product. Falls back to normalized exact equality.
+    """
+    if _normalize_text(a) == _normalize_text(b):
+        return True
+    canonical = find_canonical(a, [b])
+    return canonical == b
 
 
 def _conversation_supports_price(conversation: Conversation, price: float, rules: Optional[dict] = None) -> bool:

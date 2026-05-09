@@ -141,8 +141,12 @@ def cmd_simulate(args):
 
     seller_tokens = llm.usage.total
     consumer_tokens = consumer_llm.usage.total if consumer_llm else 0
-    sim_tokens = seller_tokens + consumer_tokens
-    print(f"\nSimulation complete. Tokens used: {sim_tokens} (seller {seller_tokens}, consumer {consumer_tokens})")
+    if consumer_llm:
+        sim_tokens = seller_tokens + consumer_tokens
+        print(f"\nSimulation complete. Tokens used: {sim_tokens} (seller {seller_tokens}, consumer {consumer_tokens})")
+    else:
+        sim_tokens = seller_tokens
+        print(f"\nSimulation complete. Tokens used: {sim_tokens} (seller+consumer share the same client)")
 
     # Run evaluation
     print("\n--- Evaluation ---")
@@ -159,11 +163,6 @@ def cmd_simulate(args):
         model_params={"temperature": temperature, "max_tokens": max_tokens},
         on_event=lambda e: event_log.append(e),
         initial_stock=stock_config,
-        usage={
-            "seller": seller_tokens,
-            "consumer": consumer_tokens,
-            "judge": judge_client.usage.total - judge_tokens_before,
-        },
         models={
             "seller": model,
             "consumer": (consumer_model_config or {}).get("name", model) if consumer_llm else model,
@@ -173,8 +172,22 @@ def cmd_simulate(args):
         business_rules=config.get("business_rules"),
     )
 
-    eval_tokens = result.usage.get("judge", 0)
-    print(f"Evaluation complete. Tokens used: {eval_tokens}")
+    judge_tokens = judge_client.usage.total - judge_tokens_before
+    if consumer_llm:
+        result.usage = {
+            "seller": seller_tokens,
+            "consumer": consumer_tokens,
+            "judge": judge_tokens,
+        }
+    else:
+        # seller+consumer share the same client; can't separate
+        result.usage = {
+            "shared_simulation": seller_tokens,
+            "judge": judge_tokens,
+        }
+    result.usage["total"] = sum(v for k, v in result.usage.items() if k != "total")
+    result.total_tokens = result.usage["total"]
+    print(f"Evaluation complete. Judge tokens used: {judge_tokens}")
 
     # Write results
     exp_dir = EXPERIMENTS / result.experiment_id

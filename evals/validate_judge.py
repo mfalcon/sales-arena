@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 
 from arena.evaluation import _find_cost, _run_judge
 from arena.llm import LLMClient
+from arena.products import find_canonical
 from arena.types import Conversation, Turn
 
 WORKSPACE = ROOT / "workspace"
@@ -152,10 +153,13 @@ def cmd_validate_profit(experiment_dir: Path) -> int:
         event_product = str(purchase_event.get("product", "") or "")
         event_price = _coerce_float(purchase_event.get("price"))
         if purchase_event:
-            if event_product and event_product != product:
-                issues.append(
-                    f"{conv_id}: purchase event product '{event_product}' != sale_details '{product}'"
-                )
+            if event_product:
+                event_canonical = find_canonical(event_product, cost_map.keys())
+                product_canonical = find_canonical(product, cost_map.keys())
+                if event_canonical != product_canonical:
+                    issues.append(
+                        f"{conv_id}: purchase event product '{event_product}' != sale_details '{product}'"
+                    )
             if event_price is not None and abs(event_price - price) > 0.01:
                 issues.append(
                     f"{conv_id}: purchase event price ${event_price:.2f} != sale_details ${price:.2f}"

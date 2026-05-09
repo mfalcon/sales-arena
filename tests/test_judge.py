@@ -44,6 +44,37 @@ def test_explicit_purchase_rejects_hedging_or_conditional(message):
     assert not _is_explicit_purchase_message(message), f"should reject: {message!r}"
 
 
+@pytest.mark.parametrize("message", [
+    "Thanks, but I'll take the Google Pixel 8 at $749",
+    "It's expensive but I'll buy it",
+    "I was unsure, but go ahead",
+])
+def test_contrastive_but_does_not_block_clear_close(message):
+    """A contrastive 'but' followed by an unhedged close is still a real purchase."""
+    assert _is_explicit_purchase_message(message), f"should accept: {message!r}"
+
+
+def test_purchase_verification_accepts_canonical_product_variant():
+    """sale_details holds the canonical name; purchase_intent may carry the raw consumer wording."""
+    conv = _sale_conversation(
+        product="Samsung Galaxy S24 Ultra",
+        price=1399,
+        seller_messages=["The Samsung Galaxy S24 Ultra is $1399 with free shipping."],
+        buyer_message="I'll take it.",
+        purchase_intent={
+            "message": "I'll take it.",
+            "status": "purchase",
+            "product": "Samsung Galaxy S24 Ultra 256GB",
+            "price": 1399,
+        },
+    )
+
+    purchase_ok, reason = _verify_purchase_details(conv)
+
+    assert purchase_ok is True
+    assert reason == ""
+
+
 CATALOG_TEXT = """
 | Product | Brand | Cost | Sale Price | Stock | Specs |
 |---|---|---|---|---|---|
