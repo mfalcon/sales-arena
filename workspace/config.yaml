@@ -23,6 +23,13 @@ judge_model:
 num_consumers: 20
 max_turns: 10
 
+# Optional: deterministic numeric rules used by the evaluator's false-positive filters.
+# Defaults match the constraints below. Override if you change shipping/discount thresholds.
+business_rules:
+  max_discount_pct: 10
+  shipping_threshold: 700
+  shipping_fee: 25
+
 stock:
   "iPhone 15": 5
   "iPhone 15 Pro Max": 3

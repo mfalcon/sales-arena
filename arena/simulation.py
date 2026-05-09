@@ -31,6 +31,7 @@ def run_simulation(
     on_turn: Optional[callable] = None,
     on_event: Optional[callable] = None,
     consumer_llm: Optional[LLMClient] = None,
+    seed: Optional[int] = None,
 ) -> list[Conversation]:
     """Run a full simulation with pseudo-parallel conversations.
 
@@ -59,6 +60,7 @@ def run_simulation(
     c_llm = consumer_llm or llm
     profiles = consumer_profiles or CONSUMER_PROFILES
     profile_names = list(profiles.keys())
+    rng = random.Random(seed) if seed is not None else random
     _seq = [0]  # mutable counter for event sequencing
 
     def _emit(event: dict):
@@ -74,13 +76,13 @@ def run_simulation(
 
     for i in range(num_consumers):
         conv_id = f"c{i+1:02d}"
-        profile_name = random.choice(profile_names)
+        profile_name = rng.choice(profile_names)
 
         # Pick a product of interest
-        interest = _pick_interest(product_list)
+        interest = _pick_interest(product_list, rng)
 
         # Calculate budget based on profile and product price
-        budget = _calculate_budget(profile_name, interest, profiles, price_map)
+        budget = _calculate_budget(profile_name, interest, profiles, price_map, rng)
 
         # Build consumer system prompt
         sys_prompt = build_consumer_system_prompt(profile_name, budget, interest, product_list)
@@ -109,7 +111,7 @@ def run_simulation(
             break
 
         # Shuffle order each round
-        random.shuffle(active)
+        rng.shuffle(active)
 
         for conv in active:
             # --- Seller responds ---
@@ -126,8 +128,10 @@ def run_simulation(
 
             try:
                 raw_seller = llm.send(seller_messages, json_mode=True)
-            except Exception:
+            except Exception as e:
                 raw_seller = ""
+                _emit({"type": "llm_error", "conv_id": conv.id, "role": "seller",
+                       "round": turn_round, "error": str(e)[:200]})
             if not raw_seller or not raw_seller.strip():
                 last_msg = conv.turns[-1].content if conv.turns else ""
                 simple_msgs = [
@@ -136,8 +140,10 @@ def run_simulation(
                 ]
                 try:
                     raw_seller = llm.send(simple_msgs, json_mode=True)
-                except Exception:
+                except Exception as e:
                     raw_seller = ""
+                    _emit({"type": "llm_error", "conv_id": conv.id, "role": "seller_fallback",
+                           "round": turn_round, "error": str(e)[:200]})
 
             seller_response = _parse_seller_response(raw_seller)
             conv.turns.append(
@@ -161,8 +167,10 @@ def run_simulation(
 
             try:
                 raw_response = c_llm.send(consumer_messages, json_mode=True)
-            except Exception:
+            except Exception as e:
                 raw_response = ""
+                _emit({"type": "llm_error", "conv_id": conv.id, "role": "consumer",
+                       "round": turn_round, "error": str(e)[:200]})
 
             parsed = _parse_consumer_response(raw_response)
             message = parsed.get("message", "").strip()
@@ -192,12 +200,13 @@ def run_simulation(
                 product = parsed.get("product", "")
                 price = parsed.get("price", 0) or 0
                 stock_before = stock.get_stock(product)
+                canonical = stock.canonical(product) or product
                 sold = product and stock.sell(product)
                 if sold:
                     stock_after = stock.get_stock(product)
                     conv.outcome = "sale"
                     conv.sale_details = {
-                        "product": product,
+                        "product": canonical,
                         "price": float(price) if price else 0,
                     }
                     conv.purchase_intent = dict(parsed)
@@ -268,10 +277,10 @@ def _parse_consumer_response(raw: str) -> dict:
     return {"message": raw.strip(), "status": "browsing"}
 
 
-def _pick_interest(product_list: Optional[list[str]]) -> str:
+def _pick_interest(product_list: Optional[list[str]], rng=random) -> str:
     """Pick a product or category the consumer is interested in."""
     if product_list:
-        return random.choice(product_list)
+        return rng.choice(product_list)
     return "available products"
 
 
@@ -280,6 +289,7 @@ def _calculate_budget(
     interest: str,
     profiles: dict,
     price_map: Optional[dict[str, float]],
+    rng=random,
 ) -> float:
     """Calculate a consumer's budget based on profile and product price."""
     profile = profiles[profile_name]
@@ -297,38 +307,8 @@ def _calculate_budget(
             # Use average price
             base_price = sum(price_map.values()) / len(price_map)
 
-    budget = base_price * random.uniform(budget_min, budget_max)
+    budget = base_price * rng.uniform(budget_min, budget_max)
     return round(budget, 2)
-
-
-def _find_product_by_price(price: float, price_map: dict[str, float]) -> Optional[str]:
-    """Find the product whose list price best matches the given sale price.
-
-    Returns the product if the price is within 15% below list price (valid discount range).
-    """
-    best = None
-    best_diff = float("inf")
-    for product, list_price in price_map.items():
-        # Price should be between 85% and 100% of list price
-        if list_price * 0.85 <= price <= list_price * 1.05:
-            diff = abs(price - list_price)
-            if diff < best_diff:
-                best_diff = diff
-                best = product
-    return best
-
-
-def _extract_product_from_conversation(
-    conv: Conversation, stock: StockTracker
-) -> str:
-    """Try to figure out which product is being discussed from conversation context."""
-    # Look through all messages for product names that are in stock
-    all_text = " ".join(t.content for t in conv.turns).lower()
-    snapshot = stock.snapshot()
-    for product in snapshot:
-        if product.lower() in all_text:
-            return product
-    return "unknown"
 
 
 def _generate_opening(llm: LLMClient, consumer_system_prompt: str) -> str:

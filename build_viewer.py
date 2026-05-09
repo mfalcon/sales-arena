@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+from arena.products import find_canonical
+
 
 def _load_experiment(exp_path: Path, config: dict):
     """Load and enrich a single experiment."""
@@ -19,8 +21,10 @@ def _load_experiment(exp_path: Path, config: dict):
         sd = conv.get("sale_details") or {}
         product = sd.get("product", "")
         price = sd.get("price")
-        cost = cost_map.get(product, 0)
-        list_price = price_map.get(product, 0)
+        cost_key = find_canonical(product, cost_map.keys())
+        price_key = find_canonical(product, price_map.keys())
+        cost = cost_map.get(cost_key, 0) if cost_key else 0
+        list_price = price_map.get(price_key, 0) if price_key else 0
 
         conv["_cost"] = cost
         conv["_list_price"] = list_price

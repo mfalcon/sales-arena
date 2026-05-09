@@ -102,6 +102,35 @@ def test_concurrent_sell_same_product():
     assert st.get_stock("OnePlus 12") == 0
 
 
+def test_longest_match_wins_for_nested_names():
+    """Variant suffix must decrement the more specific catalog key, not the prefix."""
+    st = StockTracker({"Samsung Galaxy S24": 8, "Samsung Galaxy S24 Ultra": 4})
+    assert st.sell("Samsung Galaxy S24 Ultra 256GB") is True
+    assert st.get_stock("Samsung Galaxy S24") == 8
+    assert st.get_stock("Samsung Galaxy S24 Ultra") == 3
+
+
+def test_longest_match_pixel_pro():
+    st = StockTracker({"Google Pixel 8": 6, "Google Pixel 8 Pro": 4})
+    assert st.sell("Google Pixel 8 Pro 128GB") is True
+    assert st.get_stock("Google Pixel 8") == 6
+    assert st.get_stock("Google Pixel 8 Pro") == 3
+
+
+def test_longest_match_iphone_pro_max():
+    st = StockTracker({"iPhone 15": 5, "iPhone 15 Pro Max": 3})
+    assert st.sell("iPhone 15 Pro Max black") is True
+    assert st.get_stock("iPhone 15") == 5
+    assert st.get_stock("iPhone 15 Pro Max") == 2
+
+
+def test_canonical_returns_catalog_key():
+    st = StockTracker({"Samsung Galaxy S24": 8, "Samsung Galaxy S24 Ultra": 4})
+    assert st.canonical("Samsung Galaxy S24 Ultra 256GB") == "Samsung Galaxy S24 Ultra"
+    assert st.canonical("samsung galaxy s24") == "Samsung Galaxy S24"
+    assert st.canonical("Nokia 3310") is None
+
+
 if __name__ == "__main__":
     import sys
     tests = [v for k, v in globals().items() if k.startswith("test_")]

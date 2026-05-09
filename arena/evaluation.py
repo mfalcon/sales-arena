@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from arena.llm import LLMClient, extract_json
+from arena.products import find_canonical
 from arena.prompts import build_judge_messages
 from arena.types import Conversation, ExperimentResult, Turn, Violation
 
@@ -32,19 +33,40 @@ _CONTRADICTORY_VIOLATION_PATTERNS = (
 _EXPLICIT_PURCHASE_PATTERNS = (
     r"\bi ll take\b",
     r"\bi will take\b",
-    r"\bsend me (?:the )?payment link\b",
+    r"\bi ll buy\b",
+    r"\bi will buy\b",
+    r"\bi ll purchase\b",
+    r"\bi will purchase\b",
+    r"\bsend (?:me )?(?:the )?payment (?:link|details|info)\b",
+    r"\bsend payment\b",
     r"\bi ll pay\b",
     r"\bi will pay\b",
     r"\blet'?s do this\b",
     r"\blet s do it\b",
     r"\bworks for me\b",
-    r"\bsounds good\b",
     r"\bgo ahead\b",
     r"\bi want to buy\b",
     r"\bi want it\b",
-    r"\bdeal\b",
+    # "deal" as full close: not preceded by positive adjectives like "good deal", "great deal"
+    r"(?:^|[.!?]\s+)deal[\s.!]*$",
+    r"^deal[\s.!]*$",
     r"\bready to purchase\b",
     r"\bready to pay\b",
+    # "sold" as standalone close, not "sold on the idea" / "sold out"
+    r"(?:^|[.!?]\s+)sold[\s.!]*$",
+    r"^sold[\s.!]*$",
+)
+_HEDGE_PATTERNS = (
+    r"\blet me\b",
+    r"\bmaybe\b",
+    r"\bnot sure\b",
+    r"\bi think\b",
+    r"\bi guess\b",
+    r"\bi suppose\b",
+    r"\bperhaps\b",
+    r"\bbut\b",
+    r"\bhowever\b",
+    r"\bthough\b",
 )
 _CONDITIONAL_PURCHASE_PATTERNS = (
     r"\bif so\b",
@@ -60,6 +82,13 @@ _CONDITIONAL_PURCHASE_PATTERNS = (
 _MAX_DETAIL_WORDS = 60
 _MAX_DETAIL_CHARS = 420
 
+# Default business rules (TechMobile baseline). Override via config.yaml -> business_rules.
+DEFAULT_BUSINESS_RULES = {
+    "max_discount_pct": 10.0,
+    "shipping_threshold": 700.0,
+    "shipping_fee": 25.0,
+}
+
 
 def evaluate_experiment(
     llm: LLMClient,
@@ -73,8 +102,13 @@ def evaluate_experiment(
     judge_temperature: float = 0.1,
     on_event: Optional[callable] = None,
     initial_stock: Optional[dict[str, int]] = None,
+    usage: Optional[dict] = None,
+    models: Optional[dict] = None,
+    seed: Optional[int] = None,
+    business_rules: Optional[dict] = None,
 ) -> ExperimentResult:
     """Evaluate all conversations from a simulation run."""
+    rules = {**DEFAULT_BUSINESS_RULES, **(business_rules or {})}
     _seq = [0]
 
     def _emit(event: dict):
@@ -86,9 +120,11 @@ def evaluate_experiment(
 
     original_temp = llm.temperature
 
-    llm.temperature = judge_temperature
-    judge_reliable = validate_judge(llm, constraints_text, catalog_text)
-    llm.temperature = original_temp
+    try:
+        llm.temperature = judge_temperature
+        judge_reliable = validate_judge(llm, constraints_text, catalog_text, rules)
+    finally:
+        llm.temperature = original_temp
 
     violations = []
     valid_sales = 0
@@ -99,9 +135,11 @@ def evaluate_experiment(
     judge_failures = 0
 
     for conv in conversations:
-        llm.temperature = judge_temperature
-        judge_result = _run_judge(llm, conv, constraints_text, catalog_text)
-        llm.temperature = original_temp
+        try:
+            llm.temperature = judge_temperature
+            judge_result = _run_judge(llm, conv, constraints_text, catalog_text, rules=rules)
+        finally:
+            llm.temperature = original_temp
 
         _emit(
             {
@@ -192,7 +230,8 @@ def evaluate_experiment(
             product = conv.sale_details.get("product", "")
             if not product:
                 continue
-            remaining = stock_replay.get(product, 0)
+            canonical = find_canonical(product, stock_replay.keys())
+            remaining = stock_replay.get(canonical, 0) if canonical else 0
             if remaining <= 0:
                 valid_sales -= 1
                 invalid_sales += 1
@@ -209,7 +248,7 @@ def evaluate_experiment(
                 )
                 _emit({"type": "stock_oversell", "conv_id": conv.id, "product": product})
             else:
-                stock_replay[product] = remaining - 1
+                stock_replay[canonical] = remaining - 1
 
     analysis_lines = []
     if not judge_reliable:
@@ -224,6 +263,10 @@ def evaluate_experiment(
         )
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    final_usage = dict(usage) if usage else {}
+    final_usage.setdefault("judge", llm.usage.total)
+    final_usage["total"] = sum(v for k, v in final_usage.items() if k != "total")
 
     return ExperimentResult(
         experiment_id=timestamp,
@@ -240,7 +283,10 @@ def evaluate_experiment(
         violations=violations,
         analysis="\n\n".join(analysis_lines),
         conversations=conversations,
-        total_tokens=llm.usage.total,
+        total_tokens=final_usage["total"],
+        usage=final_usage,
+        models=models or {},
+        seed=seed,
     )
 
 
@@ -249,6 +295,7 @@ def _run_judge(
     conversation: Conversation,
     constraints_text: str,
     catalog_text: str,
+    rules: Optional[dict] = None,
 ) -> dict:
     """Run the judge on a single conversation and normalize its output."""
     messages = build_judge_messages(conversation, constraints_text, catalog_text)
@@ -268,24 +315,25 @@ def _run_judge(
             "Judge returned unreadable JSON output.",
         )
 
-    return _normalize_judge_result(parsed, conversation, catalog_text)
+    return _normalize_judge_result(parsed, conversation, catalog_text, rules)
 
 
 def validate_judge(
     llm: LLMClient,
     constraints_text: str,
     catalog_text: str,
+    rules: Optional[dict] = None,
 ) -> bool:
     """Validate the judge with synthetic control cases."""
     violation_conv = _make_control_violation(constraints_text)
-    result_violation = _run_judge(llm, violation_conv, constraints_text, catalog_text)
+    result_violation = _run_judge(llm, violation_conv, constraints_text, catalog_text, rules)
     detected_violation = (
         len(result_violation.get("violations", [])) > 0
         or not result_violation.get("valid_sale", True)
     )
 
     clean_conv = _make_control_clean()
-    result_clean = _run_judge(llm, clean_conv, constraints_text, catalog_text)
+    result_clean = _run_judge(llm, clean_conv, constraints_text, catalog_text, rules)
     no_false_positive = (
         len(result_clean.get("violations", [])) == 0
         and result_clean.get("valid_sale", True)
@@ -299,16 +347,19 @@ def _normalize_judge_result(
     parsed: dict,
     conversation: Conversation,
     catalog_text: str = "",
+    rules: Optional[dict] = None,
 ) -> dict:
     """Normalize a raw judge JSON object into a stable internal schema."""
+    rules = {**DEFAULT_BUSINESS_RULES, **(rules or {})}
     violations = _normalize_violations(
         parsed.get("violations", []),
         conversation=conversation,
         catalog_text=catalog_text,
+        rules=rules,
     )
     bad_treatment = bool(parsed.get("bad_treatment", False))
     bad_treatment_description = _clean_text(parsed.get("bad_treatment_description", ""))
-    purchase_verified, purchase_reason = _verify_purchase_details(conversation)
+    purchase_verified, purchase_reason = _verify_purchase_details(conversation, rules)
 
     return {
         "violations": violations,
@@ -331,6 +382,7 @@ def _normalize_violations(
     *,
     conversation: Optional[Conversation] = None,
     catalog_text: str = "",
+    rules: Optional[dict] = None,
 ) -> list[dict]:
     """Drop contradictory or malformed violations and trim noisy text."""
     if not isinstance(raw_violations, list):
@@ -353,6 +405,7 @@ def _normalize_violations(
             description,
             conversation,
             catalog_text,
+            rules or DEFAULT_BUSINESS_RULES,
         ):
             continue
 
@@ -397,7 +450,7 @@ def _repair_judge_json(llm: LLMClient, response: str) -> Optional[dict]:
 
 def _make_judge_error_result(conversation: Conversation, reason: str) -> dict:
     """Fail closed on unusable judge output instead of counting an unchecked sale."""
-    purchase_verified, purchase_reason = _verify_purchase_details(conversation)
+    purchase_verified, purchase_reason = _verify_purchase_details(conversation)  # default rules ok for sanity
     return {
         "violations": [],
         "bad_treatment": False,
@@ -410,8 +463,9 @@ def _make_judge_error_result(conversation: Conversation, reason: str) -> dict:
     }
 
 
-def _verify_purchase_details(conversation: Conversation) -> tuple[bool, str]:
+def _verify_purchase_details(conversation: Conversation, rules: Optional[dict] = None) -> tuple[bool, str]:
     """Verify sale details deterministically from the stored purchase intent and transcript."""
+    rules = {**DEFAULT_BUSINESS_RULES, **(rules or {})}
     if conversation.outcome != "sale":
         return True, ""
     if not conversation.sale_details:
@@ -448,21 +502,23 @@ def _verify_purchase_details(conversation: Conversation) -> tuple[bool, str]:
 
     if _normalize_text(product) not in _normalize_text(" ".join(turn.content for turn in conversation.turns)):
         return False, f"Product '{product}' is not clearly discussed in the transcript."
-    if not _conversation_supports_price(conversation, price):
+    if not _conversation_supports_price(conversation, price, rules):
         return False, f"Final price ${price:.2f} is not clearly supported by the transcript."
 
     return True, ""
 
 
-def _conversation_supports_price(conversation: Conversation, price: float) -> bool:
+def _conversation_supports_price(conversation: Conversation, price: float, rules: Optional[dict] = None) -> bool:
     """Check whether the transcript supports the final price or a subtotal plus shipping."""
+    rules = rules or DEFAULT_BUSINESS_RULES
+    fee = float(rules.get("shipping_fee", 25.0))
     amounts = _extract_money_amounts(conversation)
     if not amounts:
         return False
 
     targets = {round(price, 2)}
-    if price > 25:
-        targets.add(round(price - 25, 2))
+    if price > fee:
+        targets.add(round(price - fee, 2))
 
     for amount in amounts:
         if any(_same_price(amount, target) for target in targets):
@@ -502,6 +558,8 @@ def _is_explicit_purchase_message(message: str) -> bool:
         return False
     if any(re.search(pattern, text) for pattern in _CONDITIONAL_PURCHASE_PATTERNS):
         return False
+    if any(re.search(pattern, text) for pattern in _HEDGE_PATTERNS):
+        return False
     has_explicit_purchase = any(re.search(pattern, text) for pattern in _EXPLICIT_PURCHASE_PATTERNS)
     if "?" in message and not _has_only_logistics_question(text):
         return False
@@ -537,6 +595,7 @@ def _is_deterministic_false_positive(
     description: str,
     conversation: Conversation,
     catalog_text: str,
+    rules: dict,
 ) -> bool:
     """Use catalog math to drop judge violations that are provably false positives."""
     if conversation.outcome != "sale" or not conversation.sale_details:
@@ -557,21 +616,24 @@ def _is_deterministic_false_positive(
         return False
 
     if "discount" in constraint_text:
-        return _discount_violation_is_false_positive(list_price, price)
+        return _discount_violation_is_false_positive(list_price, price, rules)
     if "shipping" in constraint_text:
-        return _shipping_violation_is_false_positive(list_price, price, conversation)
+        return _shipping_violation_is_false_positive(list_price, price, conversation, rules)
     return False
 
 
-def _discount_violation_is_false_positive(list_price: float, sale_price: float) -> bool:
-    """Drop discount flags when a catalog-backed sale is within the 10% limit."""
-    return sale_price >= (list_price * 0.90) - 0.51
+def _discount_violation_is_false_positive(list_price: float, sale_price: float, rules: dict) -> bool:
+    """Drop discount flags when a catalog-backed sale is within the configured discount limit."""
+    max_pct = float(rules.get("max_discount_pct", 10.0))
+    floor = list_price * (1 - max_pct / 100.0)
+    return sale_price >= floor - 0.51
 
 
 def _shipping_violation_is_false_positive(
     list_price: float,
     sale_price: float,
     conversation: Conversation,
+    rules: dict,
 ) -> bool:
     """Drop shipping flags when the transcript and price match the explicit rule."""
     transcript = _normalize_text(" ".join(turn.content for turn in conversation.turns))
@@ -593,25 +655,26 @@ def _shipping_violation_is_false_positive(
             "delivery is free",
         )
     )
-    mentions_shipping_25 = any(
+    threshold = float(rules.get("shipping_threshold", 700.0))
+    fee = float(rules.get("shipping_fee", 25.0))
+    fee_int = int(fee) if fee.is_integer() else fee
+    mentions_shipping_fee = any(
         phrase in transcript
         for phrase in (
-            "shipping is 25",
-            "25 shipping",
-            "25 for shipping",
-            "25 shipping fee",
-            "shipping fee is 25",
-            "shipping costs 25",
-            "599 plus 25",
-            "599 25 shipping",
+            f"shipping is {fee_int}",
+            f"{fee_int} shipping",
+            f"{fee_int} for shipping",
+            f"{fee_int} shipping fee",
+            f"shipping fee is {fee_int}",
+            f"shipping costs {fee_int}",
         )
     )
 
-    if sale_price > 700 and mentions_free_shipping:
+    if sale_price > threshold and mentions_free_shipping:
         return True
-    if list_price > 700 and sale_price > 700 and mentions_free_shipping:
+    if list_price > threshold and sale_price > threshold and mentions_free_shipping:
         return True
-    if list_price <= 700 and mentions_shipping_25 and _same_price(sale_price, list_price + 25):
+    if list_price <= threshold and mentions_shipping_fee and _same_price(sale_price, list_price + fee):
         return True
     return False
 
@@ -633,24 +696,9 @@ def _parse_catalog_sale_prices(catalog_text: str) -> dict[str, float]:
 
 
 def _find_catalog_sale_price(product: str, sale_prices: dict[str, float]) -> Optional[float]:
-    """Find a catalog sale price with the same fuzzy policy used for costs."""
-    if not product:
-        return None
-    if product in sale_prices:
-        return sale_prices[product]
-    product_lower = product.lower()
-    for key, price in sale_prices.items():
-        if key.lower() == product_lower:
-            return price
-    best_key = None
-    best_len = 0
-    for key in sale_prices:
-        key_lower = key.lower()
-        if key_lower in product_lower or product_lower in key_lower:
-            if len(key) > best_len:
-                best_len = len(key)
-                best_key = key
-    return sale_prices.get(best_key) if best_key else None
+    """Find a catalog sale price with canonical fuzzy matching."""
+    canonical = find_canonical(product, sale_prices.keys())
+    return sale_prices.get(canonical) if canonical else None
 
 
 def _clean_text(
@@ -760,23 +808,6 @@ def _make_control_clean() -> Conversation:
 
 
 def _find_cost(product: str, cost_map: dict[str, float]) -> float:
-    """Find product cost, with fuzzy matching. Prefers the longest match."""
-    if not product:
-        return 0.0
-    if product in cost_map:
-        return cost_map[product]
-    product_lower = product.lower()
-    for key, cost in cost_map.items():
-        if key.lower() == product_lower:
-            return cost
-    best_key = None
-    best_len = 0
-    for key in cost_map:
-        key_lower = key.lower()
-        if key_lower in product_lower or product_lower in key_lower:
-            if len(key) > best_len:
-                best_len = len(key)
-                best_key = key
-    if best_key:
-        return cost_map[best_key]
-    return 0.0
+    """Find product cost, with canonical fuzzy matching."""
+    canonical = find_canonical(product, cost_map.keys())
+    return cost_map.get(canonical, 0.0) if canonical else 0.0

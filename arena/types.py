@@ -77,3 +77,6 @@ class ExperimentResult:
     analysis: str
     conversations: list[Conversation]
     total_tokens: int = 0
+    usage: dict = field(default_factory=dict)  # {seller, consumer, judge, total}
+    models: dict = field(default_factory=dict)  # {seller, consumer, judge}
+    seed: Optional[int] = None

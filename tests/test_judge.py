@@ -1,11 +1,47 @@
 """Tests for judge hardening and deterministic purchase verification."""
 
+import pytest
+
 from arena.evaluation import (
+    _is_explicit_purchase_message,
     _normalize_judge_result,
     _run_judge,
     _verify_purchase_details,
 )
 from arena.types import Conversation, Turn
+
+
+@pytest.mark.parametrize("message", [
+    "I'll buy it",
+    "I'll purchase it",
+    "Please send payment details",
+    "Send the payment link",
+    "I'll take it",
+    "Let's do it",
+    "Works for me",
+    "Deal!",
+    "deal",
+    "sold",
+    "Go ahead",
+    "Ready to pay",
+    "I want to buy",
+])
+def test_explicit_purchase_accepts_common_close_phrases(message):
+    assert _is_explicit_purchase_message(message), f"should accept: {message!r}"
+
+
+@pytest.mark.parametrize("message", [
+    "That sounds like a good deal",
+    "Sounds like a great deal",
+    "Hmm, sounds good but let me think",
+    "I think I'll take it",
+    "Maybe I'll take it",
+    "If you can do that, I'll take it",
+    "Sounds good, but can you confirm specs?",
+    "I'm sold on the idea, but let me check",
+])
+def test_explicit_purchase_rejects_hedging_or_conditional(message):
+    assert not _is_explicit_purchase_message(message), f"should reject: {message!r}"
 
 
 CATALOG_TEXT = """
@@ -158,7 +194,8 @@ def test_purchase_verification_accepts_close_with_logistics_question():
     assert reason == ""
 
 
-def test_purchase_verification_accepts_works_for_me_lets_do_it_close():
+def test_purchase_verification_rejects_hedged_close_even_with_explicit_marker():
+    """A 'works for me. Let's do it!' close polluted by 'I think' is still hedging."""
     conv = _sale_conversation(
         product="Xiaomi 14",
         price=624,
@@ -166,6 +203,27 @@ def test_purchase_verification_accepts_works_for_me_lets_do_it_close():
         buyer_message="Okay, I think I'll go with the Xiaomi 14 then. $599 + $25 shipping works for me. Let's do it!",
         purchase_intent={
             "message": "Okay, I think I'll go with the Xiaomi 14 then. $599 + $25 shipping works for me. Let's do it!",
+            "status": "purchase",
+            "product": "Xiaomi 14",
+            "price": 624,
+        },
+    )
+
+    purchase_ok, reason = _verify_purchase_details(conv)
+
+    assert purchase_ok is False
+    assert "conditional" in reason.lower()
+
+
+def test_purchase_verification_accepts_clean_works_for_me_lets_do_it_close():
+    """Same close without the 'I think' hedge passes."""
+    conv = _sale_conversation(
+        product="Xiaomi 14",
+        price=624,
+        seller_messages=["The Xiaomi 14 is $599 plus $25 shipping."],
+        buyer_message="$599 + $25 shipping works for me. Let's do it!",
+        purchase_intent={
+            "message": "$599 + $25 shipping works for me. Let's do it!",
             "status": "purchase",
             "product": "Xiaomi 14",
             "price": 624,

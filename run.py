@@ -16,7 +16,7 @@ from arena.evaluation import evaluate_experiment
 from arena.llm import LLMClient
 from arena.simulation import run_simulation
 from arena.stock import StockTracker
-from arena.types import Conversation
+from arena.types import Conversation, Turn
 
 
 WORKSPACE = Path("workspace")
@@ -41,6 +41,7 @@ def cmd_simulate(args):
 
     num_consumers = args.consumers or config.get("num_consumers", 20)
     max_turns = args.turns or config.get("max_turns", 10)
+    seed = args.seed if args.seed is not None else config.get("seed")
 
     stock_config = config.get("stock", {})
     cost_map = config.get("cost_map", {})
@@ -94,6 +95,8 @@ def cmd_simulate(args):
     print(f"Consumers: {num_consumers}")
     print(f"Max turns: {max_turns}")
     print(f"Products in stock: {len(stock_config)}")
+    if seed is not None:
+        print(f"Seed: {seed}")
     print()
 
     # Progress callback
@@ -133,15 +136,20 @@ def cmd_simulate(args):
         on_turn=on_turn,
         on_event=on_event,
         consumer_llm=consumer_llm,
+        seed=seed,
     )
 
-    sim_tokens = llm.usage.total
-    print(f"\nSimulation complete. Tokens used: {sim_tokens}")
+    seller_tokens = llm.usage.total
+    consumer_tokens = consumer_llm.usage.total if consumer_llm else 0
+    sim_tokens = seller_tokens + consumer_tokens
+    print(f"\nSimulation complete. Tokens used: {sim_tokens} (seller {seller_tokens}, consumer {consumer_tokens})")
 
     # Run evaluation
     print("\n--- Evaluation ---")
+    judge_client = judge_llm or llm
+    judge_tokens_before = judge_client.usage.total
     result = evaluate_experiment(
-        llm=judge_llm or llm,
+        llm=judge_client,
         conversations=conversations,
         catalog_text=catalog_text,
         constraints_text=constraints_text,
@@ -151,9 +159,21 @@ def cmd_simulate(args):
         model_params={"temperature": temperature, "max_tokens": max_tokens},
         on_event=lambda e: event_log.append(e),
         initial_stock=stock_config,
+        usage={
+            "seller": seller_tokens,
+            "consumer": consumer_tokens,
+            "judge": judge_client.usage.total - judge_tokens_before,
+        },
+        models={
+            "seller": model,
+            "consumer": (consumer_model_config or {}).get("name", model) if consumer_llm else model,
+            "judge": (judge_model_config or {}).get("name", model) if judge_llm else model,
+        },
+        seed=seed,
+        business_rules=config.get("business_rules"),
     )
 
-    eval_tokens = llm.usage.total - sim_tokens
+    eval_tokens = result.usage.get("judge", 0)
     print(f"Evaluation complete. Tokens used: {eval_tokens}")
 
     # Write results
@@ -178,7 +198,17 @@ def cmd_simulate(args):
     print(f"Invalid sales: {result.invalid_sales}")
     print(f"No-sales: {result.no_sales}")
     print(f"Violations: {len(result.violations)}")
-    print(f"Total tokens: {result.total_tokens}")
+    if result.usage:
+        u = result.usage
+        print(f"Total tokens: {u.get('total', 0)} (seller {u.get('seller', 0)}, consumer {u.get('consumer', 0)}, judge {u.get('judge', 0)})")
+    else:
+        print(f"Total tokens: {result.total_tokens}")
+
+    llm_errors = [e for e in event_log if e.get("type") == "llm_error"]
+    if llm_errors:
+        print(f"\n⚠ LLM errors during simulation: {len(llm_errors)}")
+        for e in llm_errors[:5]:
+            print(f"  - [{e['conv_id']}] {e['role']} round {e.get('round')}: {e['error'][:120]}")
 
     if result.violations:
         print(f"\nViolations detected:")
@@ -190,9 +220,10 @@ def cmd_simulate(args):
 
 
 def cmd_evaluate(args):
-    """Re-evaluate a past experiment."""
+    """Re-evaluate a past experiment by replaying its conversations through the judge."""
     exp_dir = Path(args.experiment_dir)
     result_file = exp_dir / "result.json"
+    events_file = exp_dir / "events.json"
 
     if not result_file.exists():
         print(f"Error: {result_file} does not exist.")
@@ -201,9 +232,79 @@ def cmd_evaluate(args):
     with open(result_file) as f:
         data = json.load(f)
 
-    print(f"Re-evaluation of {exp_dir.name}")
+    catalog_text = _read_file(WORKSPACE / "catalog.md")
+    constraints_text = _read_file(WORKSPACE / "constraints.md")
+    config = _read_config(WORKSPACE / "config.yaml")
+
+    model_config = config.get("model", {})
+    judge_config = config.get("judge_model") or model_config
+    judge_llm = LLMClient(
+        base_url=judge_config.get("base_url", "http://localhost:1234/v1"),
+        model=judge_config.get("name", "local-model"),
+        temperature=judge_config.get("temperature", 0.1),
+        max_tokens=judge_config.get("max_tokens", 800),
+        api_key=os.path.expandvars(judge_config.get("api_key", "not-needed")),
+    )
+
+    purchase_intents = {}
+    if events_file.exists():
+        with open(events_file) as f:
+            events = json.load(f)
+        for event in events:
+            if event.get("type") == "consumer_intent" and event.get("status") == "purchase":
+                purchase_intents[event.get("conv_id")] = event.get("raw_json", {})
+
+    conversations = []
+    for raw in data.get("conversations", []):
+        conv = Conversation(
+            id=raw.get("id", "?"),
+            consumer_profile=raw.get("consumer_profile", "?"),
+            outcome=raw.get("outcome", "pending"),
+            sale_details=raw.get("sale_details"),
+            purchase_intent=purchase_intents.get(raw.get("id"))
+                or raw.get("purchase_intent"),
+            status=raw.get("status", "finished"),
+            turns=[
+                Turn(
+                    role=t.get("role", "?"),
+                    content=t.get("content", ""),
+                    turn_number=int(t.get("turn_number", 0) or 0),
+                )
+                for t in raw.get("turns", [])
+            ],
+        )
+        conversations.append(conv)
+
+    print(f"Re-evaluating {exp_dir.name} with judge={judge_config.get('name')}")
     print(f"Original profit: ${data.get('total_profit', 0):,.2f}")
-    print(f"Valid sales: {data.get('valid_sales', 0)}/{data.get('total_conversations', 0)}")
+    print(f"Original valid sales: {data.get('valid_sales', 0)}/{data.get('total_conversations', 0)}")
+    print()
+
+    result = evaluate_experiment(
+        llm=judge_llm,
+        conversations=conversations,
+        catalog_text=catalog_text,
+        constraints_text=constraints_text,
+        cost_map=config.get("cost_map", {}),
+        seller_prompt=data.get("seller_prompt", ""),
+        model_name=data.get("model", ""),
+        model_params=data.get("model_params", {}),
+        initial_stock=config.get("stock", {}),
+        models={"judge": judge_config.get("name", "")},
+        business_rules=config.get("business_rules"),
+    )
+
+    out_path = exp_dir / "reeval.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(dataclasses.asdict(result), f, ensure_ascii=False, indent=2, default=str)
+
+    print(f"\n{'='*50}")
+    print(f"RE-EVALUATION RESULTS")
+    print(f"{'='*50}")
+    print(f"Profit: ${result.total_profit:,.2f} (original: ${data.get('total_profit', 0):,.2f})")
+    print(f"Valid sales: {result.valid_sales}/{result.total_conversations} (original: {data.get('valid_sales', 0)}/{data.get('total_conversations', 0)})")
+    print(f"Violations: {len(result.violations)}")
+    print(f"\nSaved to: {out_path}")
 
 
 def _read_file(path: Path) -> str:
@@ -342,6 +443,9 @@ def main():
     )
     sim_parser.add_argument(
         "--turns", type=int, default=None, help="Max turns per conversation"
+    )
+    sim_parser.add_argument(
+        "--seed", type=int, default=None, help="Random seed for reproducibility"
     )
 
     # evaluate
