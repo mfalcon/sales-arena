@@ -359,6 +359,7 @@ def _normalize_judge_result(
     rules_by_id = {rid: text for rid, text in rules_list}
 
     rule_verdicts = _parse_rule_verdicts(parsed.get("rules", []), rules_by_id)
+    _apply_numeric_override(rule_verdicts, rules_by_id, rules)
     integrity_verdicts = _parse_integrity_verdicts(parsed.get("sale_integrity", {}))
 
     verdicts: dict[str, dict] = {}
@@ -412,10 +413,11 @@ def _normalize_judge_result(
 
 
 def _parse_rule_verdicts(raw: object, rules_by_id: dict[int, str]) -> dict[int, dict]:
-    """Parse the rules[] array from the judge. Returns {rule_id: {verdict, reason}}.
+    """Parse the rules[] array from the judge. Returns {rule_id: {verdict, reason, numbers}}.
 
     Missing rules (judge skipped them) default to "pass" with a flag in reason.
     Invalid verdicts are coerced to "pass" (lenient) and noted in reason.
+    Optional "numbers" field is preserved verbatim for deterministic override.
     """
     out: dict[int, dict] = {}
     if isinstance(raw, list):
@@ -433,13 +435,78 @@ def _parse_rule_verdicts(raw: object, rules_by_id: dict[int, str]) -> dict[int, 
             if verdict not in _VALID_VERDICTS:
                 verdict = "pass"
                 reason = f"[invalid verdict coerced to pass] {reason}".strip()
-            out[rid] = {"verdict": verdict, "reason": reason}
+            numbers = entry.get("numbers") if isinstance(entry.get("numbers"), dict) else None
+            out[rid] = {"verdict": verdict, "reason": reason, "numbers": numbers}
 
     for rid in rules_by_id:
         if rid not in out:
-            out[rid] = {"verdict": "pass", "reason": "[rule not addressed by judge — defaulted to pass]"}
+            out[rid] = {
+                "verdict": "pass",
+                "reason": "[rule not addressed by judge — defaulted to pass]",
+                "numbers": None,
+            }
 
     return out
+
+
+def _apply_numeric_override(
+    rule_verdicts: dict[int, dict],
+    rules_by_id: dict[int, str],
+    rules_config: dict,
+) -> None:
+    """Override judge fail verdicts when the math actually shows the rule was respected.
+
+    For rules whose text mentions "discount" or "shipping" AND whose judge item
+    carries a structured "numbers" payload, recompute pass/fail deterministically.
+    Only fail->pass overrides happen here: judge "pass" verdicts are trusted, and
+    judge "fail" verdicts without numbers are also kept (the judge may be flagging
+    on grounds unrelated to arithmetic — e.g. wording, ordering, sequencing).
+
+    Modifies rule_verdicts in place.
+    """
+    max_pct = float(rules_config.get("max_discount_pct", 10.0))
+    threshold = float(rules_config.get("shipping_threshold", 700.0))
+
+    for rid, info in rule_verdicts.items():
+        if info.get("verdict") != "fail":
+            continue
+        numbers = info.get("numbers") or {}
+        if not isinstance(numbers, dict):
+            continue
+        check = str(numbers.get("check", "")).strip().lower()
+        rule_text = (rules_by_id.get(rid) or "").lower()
+
+        if check == "discount" and "discount" in rule_text:
+            list_price = _coerce_price(numbers.get("list_price"))
+            sale_price = _coerce_price(numbers.get("sale_price"))
+            if list_price is None or sale_price is None or list_price <= 0:
+                continue
+            floor = list_price * (1.0 - max_pct / 100.0)
+            if sale_price >= floor - 0.51:
+                actual_pct = (list_price - sale_price) / list_price * 100.0
+                info["verdict"] = "pass"
+                info["reason"] = (
+                    f"[backend override: sale_price ${sale_price:.2f} >= "
+                    f"floor ${floor:.2f} ({actual_pct:.2f}% off, within "
+                    f"{max_pct:.0f}% max). Original judge reason: "
+                    f"{info.get('reason', '')}"
+                )
+        elif check == "shipping" and "shipping" in rule_text:
+            quoted = _coerce_price(numbers.get("quoted_price"))
+            claimed = str(numbers.get("claimed_shipping", "")).strip().lower()
+            if quoted is None or quoted <= 0 or claimed not in ("free", "fee", "none"):
+                continue
+            correct = (
+                (quoted > threshold and claimed == "free")
+                or (quoted <= threshold and claimed == "fee")
+            )
+            if correct:
+                info["verdict"] = "pass"
+                info["reason"] = (
+                    f"[backend override: ${quoted:.2f} vs shipping threshold "
+                    f"${threshold:.0f}, claimed '{claimed}' — correct application "
+                    f"of the rule. Original judge reason: {info.get('reason', '')}"
+                )
 
 
 def _parse_integrity_verdicts(raw: object) -> dict[str, dict]:
