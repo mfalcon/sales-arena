@@ -512,14 +512,15 @@ def _normalize_violations(
             continue
         if _is_contradictory_violation(description):
             continue
-        if conversation and _is_deterministic_false_positive(
-            constraint,
-            description,
-            conversation,
-            catalog_text,
-            rules or DEFAULT_BUSINESS_RULES,
-        ):
-            continue
+        # Deterministic shipping/discount false-positive filter is disabled
+        # (2026-05-20): it was designed to catch hallucinations from an
+        # earlier weaker judge that flagged rule_2/rule_3 fails when the
+        # final price math was actually correct. The current strict judge
+        # already checks math, so the filter only eats legitimate
+        # misstatement-and-correct violations (e.g. c14 sale, where the
+        # seller wrongly said "free shipping" before correcting). Keep the
+        # _is_contradictory_violation filter (above) which catches the
+        # genuinely self-negating judge outputs.
 
         key = (constraint.lower(), description.lower())
         if key in seen:
@@ -765,11 +766,17 @@ def _is_deterministic_false_positive(
     catalog_text: str,
     rules: dict,
 ) -> bool:
-    """Use catalog math to drop judge violations that are provably false positives."""
+    """Use catalog math to drop judge violations that are provably false positives.
+
+    Only applies when the *constraint text itself* is the discount/shipping
+    rule. Previously this also looked at the violation's description, which
+    incorrectly filtered rule_7 fails whose seller-quote happened to mention
+    "shipping" (e.g. "made up shipping details: 2-3 business days").
+    """
     if conversation.outcome != "sale" or not conversation.sale_details:
         return False
 
-    constraint_text = _normalize_text(f"{constraint} {description}")
+    constraint_text = _normalize_text(constraint)
     if "discount" not in constraint_text and "shipping" not in constraint_text:
         return False
 

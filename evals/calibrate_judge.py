@@ -415,20 +415,20 @@ def _append_cache(path: Path, key: str, judge: dict) -> None:
 
 
 def _judge_signature(config: dict) -> str:
-    """Cache key prefix that bumps when judge config changes."""
+    """Cache key prefix that bumps when judge config or normalization changes."""
     judge = config.get("judge_model", {})
     name = judge.get("name", "?")
     temp = judge.get("temperature", "?")
-    prompt_path = ROOT / "arena" / "prompts.py"
-    if prompt_path.exists():
-        try:
-            import hashlib
+    hashed_paths = [ROOT / "arena" / "prompts.py", ROOT / "arena" / "evaluation.py"]
+    try:
+        import hashlib
 
-            text = prompt_path.read_text(encoding="utf-8")
-            sig = hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
-        except Exception:
-            sig = "?"
-    else:
+        h = hashlib.sha256()
+        for p in hashed_paths:
+            if p.exists():
+                h.update(p.read_text(encoding="utf-8").encode("utf-8"))
+        sig = h.hexdigest()[:8]
+    except Exception:
         sig = "?"
     return f"{name}@{temp}#{sig}"
 
