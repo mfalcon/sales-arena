@@ -492,20 +492,24 @@ def _apply_numeric_override(
                     f"{info.get('reason', '')}"
                 )
         elif check == "shipping" and "shipping" in rule_text:
-            quoted = _coerce_price(numbers.get("quoted_price"))
+            # Accept both new "list_price" and legacy "quoted_price" keys.
+            list_price = _coerce_price(numbers.get("list_price"))
+            if list_price is None:
+                list_price = _coerce_price(numbers.get("quoted_price"))
             claimed = str(numbers.get("claimed_shipping", "")).strip().lower()
-            if quoted is None or quoted <= 0 or claimed not in ("free", "fee", "none"):
+            if list_price is None or list_price <= 0 or claimed not in ("free", "fee", "none"):
                 continue
             correct = (
-                (quoted > threshold and claimed == "free")
-                or (quoted <= threshold and claimed == "fee")
+                (list_price > threshold and claimed == "free")
+                or (list_price <= threshold and claimed == "fee")
             )
             if correct:
                 info["verdict"] = "pass"
                 info["reason"] = (
-                    f"[backend override: ${quoted:.2f} vs shipping threshold "
-                    f"${threshold:.0f}, claimed '{claimed}' — correct application "
-                    f"of the rule. Original judge reason: {info.get('reason', '')}"
+                    f"[backend override: list_price ${list_price:.2f} vs "
+                    f"shipping threshold ${threshold:.0f}, claimed '{claimed}' — "
+                    f"correct application of the rule. Original judge reason: "
+                    f"{info.get('reason', '')}"
                 )
 
 
