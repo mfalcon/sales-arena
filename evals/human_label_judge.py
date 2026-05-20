@@ -265,7 +265,22 @@ def _is_positive(judge: dict) -> bool:
 
 
 def _is_human_positive(label: dict) -> bool:
-    """Human positive means invalid sale or any human violation."""
+    """Human positive means invalid sale or any human violation.
+
+    Supports two label schemas:
+      - Old (human_label_judge.py output): top-level `human_valid_sale`,
+        `human_purchase_verified`, `human_violations`.
+      - New (label_judge_web.py output): per-item `human_verdicts` dict
+        keyed by `rule_N` / `integrity_<key>`, each `{verdict, note}`.
+        Any rule_* or integrity_* with verdict=="fail" → positive.
+        `na` and `pass` do not contribute to positive.
+    """
+    verdicts = label.get("human_verdicts")
+    if isinstance(verdicts, dict):
+        return any(
+            isinstance(v, dict) and str(v.get("verdict", "")).strip().lower() == "fail"
+            for v in verdicts.values()
+        )
     return (
         not bool(label.get("human_valid_sale", True))
         or not bool(label.get("human_purchase_verified", True))
