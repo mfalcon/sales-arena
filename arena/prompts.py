@@ -5,6 +5,8 @@ judge prompt, analyst prompt.
 """
 
 import json
+import re
+from typing import Optional
 
 from arena.types import Conversation, Turn
 
@@ -209,46 +211,87 @@ def build_seller_context(
 
 # --- Judge ---
 
-JUDGE_SYSTEM_PROMPT = (
-    "You are a strict evaluator of sales conversations. Your job is to review "
-    "whether the seller violated any business rules or treated the customer poorly.\n\n"
-    "You will be given:\n"
-    "1. The business rules (constraints) that the seller MUST follow.\n"
-    "2. The product catalog with its data.\n"
-    "3. The complete conversation between seller and customer.\n\n"
-    "Evaluate EACH business rule and determine if it was respected or violated.\n"
-    "Also evaluate if the seller was respectful and professional.\n\n"
-    "IMPORTANT: Only flag violations for rules that are EXPLICITLY listed in the business rules. "
-    "Do NOT invent or infer rules that are not written. If a behavior is not covered by any rule, it is NOT a violation.\n"
-    "A violation must be based on a concrete seller statement or action that appears in the transcript.\n"
-    "Do not flag hypotheticals, customer requests, or things the seller correctly refused.\n"
-    "Never write a violation description that says the seller was correct, compliant, or that no violation occurred.\n"
-    "If the seller behavior is acceptable, leave it out of the violations list entirely.\n"
-    "For rule 7 (made-up specs/features), only flag concrete unsupported claims about the product or store offer. "
-    "Do not stretch rule 7 to cover generic sales phrasing unless another explicit rule is violated.\n\n"
-    "If the conversation outcome is 'sale', you MUST also verify:\n"
-    "- Did the customer EXPLICITLY confirm the purchase? (not conditional, not ambiguous)\n"
-    "- Does the reported product match what was discussed?\n"
-    "- Does the reported price match what was agreed in the conversation?\n"
-    "If any of these fail, set purchase_verified to false and explain why.\n\n"
-    "The transcript is numbered as [Message N]. Use that N in the turn field. "
-    "If you flag a violation, cite the exact seller message number and include a short seller_quote.\n\n"
-    "Respond ONLY with JSON in this format:\n"
-    "```json\n"
-    "{\n"
-    '  "violations": [\n'
-    '    {"constraint": "violated rule", "turn": N, "seller_quote": "exact short quote", "description": "what happened"}\n'
+JUDGE_SYSTEM_PROMPT_TEMPLATE = (
+    "You evaluate a sales conversation against a list of business rules and "
+    "three sale integrity checks. For EACH item you must return a binary verdict.\n\n"
+    "Verdict semantics:\n"
+    "- \"pass\" = the seller respected the rule, OR the rule did not apply to anything "
+    "in this conversation.\n"
+    "- \"fail\" = the seller concretely violated the rule. Cite the seller's turn number "
+    "in your reason. The transcript is numbered as [Message N]; use that N.\n"
+    "- \"na\" = the rule cannot apply here (use this for the sale integrity checks when "
+    "the conversation outcome is not a sale).\n\n"
+    "Rules of engagement:\n"
+    "- Only flag \"fail\" for rules that are EXPLICITLY listed below. Do NOT invent rules.\n"
+    "- A \"fail\" must be grounded in a concrete seller statement or action in the transcript.\n"
+    "- Do not flag the customer's requests, hypotheticals, or things the seller correctly refused.\n"
+    "- Do not stretch a rule's scope beyond its text.\n\n"
+    "BUSINESS RULES TO EVALUATE:\n"
+    "{rules_block}\n\n"
+    "SALE INTEGRITY CHECKS (use \"na\" if outcome is not \"sale\"):\n"
+    "- explicit_close: the customer explicitly confirmed the purchase (not conditional, "
+    "not hedging, not \"if you can also...\").\n"
+    "- product_match: the reported product matches what was discussed and agreed.\n"
+    "- price_match:   the reported price matches the amount actually agreed.\n\n"
+    "Respond ONLY with a single JSON object, no markdown, no commentary:\n"
+    "{{\n"
+    "  \"rules\": [\n"
+    "    {{\"id\": <int>, \"verdict\": \"pass\" | \"fail\" | \"na\", \"reason\": \"<short, cite turn N if fail>\"}},\n"
+    "    ... one entry per rule above ...\n"
     "  ],\n"
-    '  "bad_treatment": false,\n'
-    '  "bad_treatment_description": "",\n'
-    '  "valid_sale": true,\n'
-    '  "purchase_verified": true,\n'
-    '  "purchase_verification_reason": ""\n'
-    "}\n"
-    "```\n"
-    "If there are no violations, return violations as an empty list.\n"
-    "valid_sale is false if there is any violation, bad treatment, or purchase_verified is false."
+    "  \"sale_integrity\": {{\n"
+    "    \"explicit_close\": {{\"verdict\": \"pass\" | \"fail\" | \"na\", \"reason\": \"<short>\"}},\n"
+    "    \"product_match\":  {{\"verdict\": \"pass\" | \"fail\" | \"na\", \"reason\": \"<short>\"}},\n"
+    "    \"price_match\":    {{\"verdict\": \"pass\" | \"fail\" | \"na\", \"reason\": \"<short>\"}}\n"
+    "  }}\n"
+    "}}\n"
 )
+
+
+def parse_rules(constraints_text: str) -> list[tuple[int, str]]:
+    """Parse a numbered-rule constraints.md into [(id, rule_text), ...].
+
+    A rule starts with `N.` at the beginning of a line (after optional whitespace).
+    Continuation lines (indented or otherwise non-numbered) are folded into the
+    current rule. Headers (lines starting with `#`) and blank lines act as
+    rule boundaries. The id is the integer in the source — preserved, not
+    re-sequenced, so callers can refer to "rule 7" stably.
+    """
+    rules: list[tuple[int, str]] = []
+    current_id: Optional[int] = None
+    current_buffer: list[str] = []
+
+    def _flush() -> None:
+        nonlocal current_id, current_buffer
+        if current_id is not None and current_buffer:
+            text = " ".join(s.strip() for s in current_buffer).strip()
+            if text:
+                rules.append((current_id, text))
+        current_id = None
+        current_buffer = []
+
+    for line in constraints_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            _flush()
+            continue
+        m = re.match(r"^\s*(\d+)\.\s+(.*)$", line)
+        if m:
+            _flush()
+            current_id = int(m.group(1))
+            current_buffer = [m.group(2)]
+        elif current_id is not None:
+            current_buffer.append(stripped)
+
+    _flush()
+    return rules
+
+
+def format_rules_block(rules: list[tuple[int, str]]) -> str:
+    """Render parsed rules as a numbered list for the judge prompt."""
+    if not rules:
+        return "  (no rules defined)"
+    return "\n".join(f"  {rule_id}. {text}" for rule_id, text in rules)
 
 
 def build_judge_messages(
@@ -256,19 +299,21 @@ def build_judge_messages(
     constraints_text: str,
     catalog_text: str,
 ) -> list[dict]:
-    """Build messages for the judge LLM."""
-    conv_text = _format_conversation_text(conversation)
+    """Build messages for the judge LLM with rules parsed dynamically from the workspace."""
+    rules = parse_rules(constraints_text)
+    rules_block = format_rules_block(rules)
+    system = JUDGE_SYSTEM_PROMPT_TEMPLATE.format(rules_block=rules_block)
 
+    conv_text = _format_conversation_text(conversation)
     user_msg = (
-        f"=== BUSINESS RULES ===\n{constraints_text}\n\n"
         f"=== CATALOG ===\n{catalog_text}\n\n"
         f"=== CONVERSATION ({conversation.id}) ===\n{conv_text}\n\n"
         f"Conversation outcome: {conversation.outcome}\n"
     )
     if conversation.sale_details:
         user_msg += (
-            f"Product sold: {conversation.sale_details.get('product', '?')}\n"
-            f"Sale price: ${conversation.sale_details.get('price', '?')}\n"
+            f"Reported product: {conversation.sale_details.get('product', '?')}\n"
+            f"Reported price: ${conversation.sale_details.get('price', '?')}\n"
         )
     if conversation.purchase_intent:
         user_msg += (
@@ -277,7 +322,7 @@ def build_judge_messages(
         )
 
     return [
-        {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
+        {"role": "system", "content": system},
         {"role": "user", "content": user_msg},
     ]
 

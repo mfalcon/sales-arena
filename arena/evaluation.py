@@ -6,7 +6,7 @@ from typing import Optional
 
 from arena.llm import LLMClient, extract_json
 from arena.products import find_canonical
-from arena.prompts import build_judge_messages
+from arena.prompts import build_judge_messages, parse_rules
 from arena.types import Conversation, ExperimentResult, Turn, Violation
 
 
@@ -30,59 +30,41 @@ _CONTRADICTORY_VIOLATION_PATTERNS = (
     r"\bunder 10\b",
     r"\bcomplies with the rule\b",
 )
-_EXPLICIT_PURCHASE_PATTERNS = (
-    r"\bi ll take\b",
-    r"\bi will take\b",
-    r"\bi ll buy\b",
-    r"\bi will buy\b",
-    r"\bi ll purchase\b",
-    r"\bi will purchase\b",
-    r"\bsend (?:me )?(?:the )?payment (?:link|details|info)\b",
-    r"\bsend payment\b",
-    r"\bi ll pay\b",
-    r"\bi will pay\b",
-    r"\blet'?s do this\b",
-    r"\blet s do it\b",
-    r"\bworks for me\b",
-    r"\bgo ahead\b",
-    r"\bi want to buy\b",
-    r"\bi want it\b",
-    # "deal" as full close: not preceded by positive adjectives like "good deal", "great deal"
-    r"(?:^|[.!?]\s+)deal[\s.!]*$",
-    r"^deal[\s.!]*$",
-    r"\bready to purchase\b",
-    r"\bready to pay\b",
-    # "sold" as standalone close, not "sold on the idea" / "sold out"
-    r"(?:^|[.!?]\s+)sold[\s.!]*$",
-    r"^sold[\s.!]*$",
-)
-_HEDGE_PATTERNS = (
-    r"\blet me\b",
-    r"\bmaybe\b",
-    r"\bnot sure\b",
-    r"\bi think\b",
-    r"\bi guess\b",
-    r"\bi suppose\b",
-    r"\bperhaps\b",
-    # Specific contrastive uncertainty — not every "but" is hedging.
-    r"\bbut (?:can|could|would|will) you\b",
-    r"\bbut (?:i|we) (?:need|want|have to|might|may|should)\b",
-    r"\bbut (?:let|maybe|first|wait|hold|actually|hmm)\b",
-    r"\bbut not sure\b",
-    r"\bbut i'?m not\b",
-    r"\bbut before\b",
-    r"\bbut only if\b",
-)
-_CONDITIONAL_PURCHASE_PATTERNS = (
-    r"\bif so\b",
-    r"\bif that's\b",
-    r"\bif that is\b",
-    r"\bif you can\b",
-    r"\bas long as\b",
-    r"\bonce you\b",
-    r"\bwhen you\b",
-    r"\bbefore i (?:buy|confirm)\b",
-    r"\bcan you confirm\b",
+
+# Explicit-close detection is now a micro-judge call (see _micro_judge_explicit_close).
+# The previous regex patterns (_EXPLICIT_PURCHASE_PATTERNS, _HEDGE_PATTERNS,
+# _CONDITIONAL_PURCHASE_PATTERNS) were brittle and missed cases like
+# "Please confirm $X and I'll proceed with payment" (ruled valid by the user
+# on 2026-05-19). The micro-judge handles the same decision with linguistic
+# judgment instead of pattern matching.
+
+MICRO_JUDGE_EXPLICIT_CLOSE_PROMPT = (
+    "You evaluate ONE yes/no question about a sales conversation: did the "
+    "customer, in their FINAL message, EXPLICITLY confirm the purchase, "
+    "WITHOUT conditionality?\n\n"
+    "The customer does NOT need to restate the price or product if the "
+    "previous seller turn already named them and the customer's reply "
+    "clearly accepts. A reference like \"the confirmed price\", \"that "
+    "price\", \"the agreed total\", or simply \"the order\" is enough when "
+    "the seller's prior turn fixed the value.\n\n"
+    "PASS examples:\n"
+    "- \"Perfect, I'll take the iPhone 15 for $1,000.\"\n"
+    "- \"That works! Please confirm $424 and I'll proceed with payment.\"\n"
+    "- \"Perfect—please go ahead and process the order at the confirmed total.\"\n"
+    "- \"Please send me the payment link so I can complete the purchase.\"\n"
+    "- \"Let's do it. I'll take it. What are the next steps to pay?\"\n"
+    "- \"Perfect! Everything looks good. Please process the order.\"\n\n"
+    "FAIL examples:\n"
+    "- \"If you can drop it to $999, I'll take it.\" (conditional on seller "
+    "action)\n"
+    "- \"Sounds great, let me think about it.\" (hedging)\n"
+    "- \"I might buy it if the warranty is real.\" (conditional + hedging)\n"
+    "- \"Thanks, I'll consider it.\" (no commitment)\n\n"
+    "Context (last seller turn before the close):\n\"\"\"{seller_prev}\"\"\"\n\n"
+    "Customer's final message:\n\"\"\"{message}\"\"\"\n\n"
+    "Reported sale details: product={product}, price=${price}\n\n"
+    "Respond ONLY with a JSON object:\n"
+    "{{\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one short sentence>\"}}\n"
 )
 _MAX_DETAIL_WORDS = 60
 _MAX_DETAIL_CHARS = 420
@@ -320,7 +302,7 @@ def _run_judge(
             "Judge returned unreadable JSON output.",
         )
 
-    return _normalize_judge_result(parsed, conversation, catalog_text, rules)
+    return _normalize_judge_result(parsed, conversation, constraints_text, catalog_text, rules, llm=llm)
 
 
 def validate_judge(
@@ -348,23 +330,69 @@ def validate_judge(
     return detected_violation and no_false_positive
 
 
+_TREATMENT_KEYWORDS = ("respect", "professional", "treatment", "rude", "polite")
+_VALID_VERDICTS = ("pass", "fail", "na")
+
+
 def _normalize_judge_result(
     parsed: dict,
     conversation: Conversation,
+    constraints_text: str = "",
     catalog_text: str = "",
     rules: Optional[dict] = None,
+    llm: Optional[LLMClient] = None,
 ) -> dict:
-    """Normalize a raw judge JSON object into a stable internal schema."""
+    """Normalize a raw judge JSON object into a stable internal schema.
+
+    The judge emits per-item binary verdicts ("pass" | "fail" | "na") under
+    `rules[]` and `sale_integrity{}`. This function:
+      1. Parses verdicts into an atomic `verdicts` dict keyed by item id
+         (rule_<N> for compliance rules, integrity_<key> for sale integrity).
+      2. Derives backward-compatible fields (violations[], valid_sale,
+         bad_treatment, purchase_verified) so downstream code keeps working.
+      3. purchase_verified comes from the existing deterministic check
+         (`_verify_purchase_details`); the LLM's sale-integrity verdicts are
+         recorded in `verdicts` for calibration but do not override it.
+    """
     rules = {**DEFAULT_BUSINESS_RULES, **(rules or {})}
+    rules_list = parse_rules(constraints_text) if constraints_text else []
+    rules_by_id = {rid: text for rid, text in rules_list}
+
+    rule_verdicts = _parse_rule_verdicts(parsed.get("rules", []), rules_by_id)
+    integrity_verdicts = _parse_integrity_verdicts(parsed.get("sale_integrity", {}))
+
+    verdicts: dict[str, dict] = {}
+    for rid, info in rule_verdicts.items():
+        verdicts[f"rule_{rid}"] = info
+    for key, info in integrity_verdicts.items():
+        verdicts[f"integrity_{key}"] = info
+
+    raw_violations = []
+    for rid, info in rule_verdicts.items():
+        if info["verdict"] != "fail":
+            continue
+        rule_text = rules_by_id.get(rid, f"rule {rid}")
+        raw_violations.append(
+            {
+                "constraint": rule_text,
+                "turn": _parse_turn_from_reason(info.get("reason", "")),
+                "seller_quote": "",
+                "description": info.get("reason", ""),
+            }
+        )
+
     violations = _normalize_violations(
-        parsed.get("violations", []),
+        raw_violations,
         conversation=conversation,
         catalog_text=catalog_text,
         rules=rules,
     )
-    bad_treatment = bool(parsed.get("bad_treatment", False))
-    bad_treatment_description = _clean_text(parsed.get("bad_treatment_description", ""))
-    purchase_verified, purchase_reason = _verify_purchase_details(conversation, rules)
+
+    bad_treatment, bad_treatment_description = _derive_bad_treatment(
+        rule_verdicts, rules_by_id
+    )
+
+    purchase_verified, purchase_reason = _verify_purchase_details(conversation, rules, llm=llm)
 
     return {
         "violations": violations,
@@ -379,7 +407,86 @@ def _normalize_judge_result(
         "purchase_verification_reason": purchase_reason,
         "judge_error": False,
         "judge_error_reason": "",
+        "verdicts": verdicts,
     }
+
+
+def _parse_rule_verdicts(raw: object, rules_by_id: dict[int, str]) -> dict[int, dict]:
+    """Parse the rules[] array from the judge. Returns {rule_id: {verdict, reason}}.
+
+    Missing rules (judge skipped them) default to "pass" with a flag in reason.
+    Invalid verdicts are coerced to "pass" (lenient) and noted in reason.
+    """
+    out: dict[int, dict] = {}
+    if isinstance(raw, list):
+        for entry in raw:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                rid = int(entry.get("id"))
+            except (TypeError, ValueError):
+                continue
+            if rules_by_id and rid not in rules_by_id:
+                continue  # invented rule id
+            verdict = str(entry.get("verdict", "")).strip().lower()
+            reason = _clean_text(entry.get("reason", ""))
+            if verdict not in _VALID_VERDICTS:
+                verdict = "pass"
+                reason = f"[invalid verdict coerced to pass] {reason}".strip()
+            out[rid] = {"verdict": verdict, "reason": reason}
+
+    for rid in rules_by_id:
+        if rid not in out:
+            out[rid] = {"verdict": "pass", "reason": "[rule not addressed by judge — defaulted to pass]"}
+
+    return out
+
+
+def _parse_integrity_verdicts(raw: object) -> dict[str, dict]:
+    """Parse the sale_integrity{} object. Returns {key: {verdict, reason}}."""
+    expected_keys = ("explicit_close", "product_match", "price_match")
+    out: dict[str, dict] = {}
+    raw_dict = raw if isinstance(raw, dict) else {}
+    for key in expected_keys:
+        entry = raw_dict.get(key, {})
+        if not isinstance(entry, dict):
+            entry = {}
+        verdict = str(entry.get("verdict", "")).strip().lower()
+        reason = _clean_text(entry.get("reason", ""))
+        if verdict not in _VALID_VERDICTS:
+            verdict = "na"
+            reason = f"[invalid verdict coerced to na] {reason}".strip()
+        out[key] = {"verdict": verdict, "reason": reason}
+    return out
+
+
+def _parse_turn_from_reason(reason: str) -> Optional[int]:
+    """Extract a turn number citation (e.g. 'turn 4', 'Message 8') from the reason string."""
+    if not reason:
+        return None
+    m = re.search(r"\b(?:turn|message|msg)\s*#?\s*(\d+)\b", reason, flags=re.IGNORECASE)
+    if m:
+        try:
+            return int(m.group(1))
+        except ValueError:
+            return None
+    return None
+
+
+def _derive_bad_treatment(
+    rule_verdicts: dict[int, dict], rules_by_id: dict[int, str]
+) -> tuple[bool, str]:
+    """Backward-compat: set bad_treatment=True iff a rule whose text mentions
+    respect/professional/treatment keywords failed. Keyword matching is on
+    the workspace's rule text — not hardcoded — so it stays domain-agnostic.
+    """
+    for rid, info in rule_verdicts.items():
+        if info["verdict"] != "fail":
+            continue
+        rule_text = rules_by_id.get(rid, "").lower()
+        if any(kw in rule_text for kw in _TREATMENT_KEYWORDS):
+            return True, info.get("reason", "")
+    return False, ""
 
 
 def _normalize_violations(
@@ -465,11 +572,24 @@ def _make_judge_error_result(conversation: Conversation, reason: str) -> dict:
         "purchase_verification_reason": purchase_reason,
         "judge_error": True,
         "judge_error_reason": _clean_text(reason, max_words=24, max_chars=200),
+        "verdicts": {},
     }
 
 
-def _verify_purchase_details(conversation: Conversation, rules: Optional[dict] = None) -> tuple[bool, str]:
-    """Verify sale details deterministically from the stored purchase intent and transcript."""
+def _verify_purchase_details(
+    conversation: Conversation,
+    rules: Optional[dict] = None,
+    llm: Optional[LLMClient] = None,
+) -> tuple[bool, str]:
+    """Verify sale details deterministically from the stored purchase intent and transcript.
+
+    The explicit-close check (was the customer's final message a non-conditional
+    confirmation?) is delegated to a micro-judge LLM call. The rest of the
+    verification (product match, price match, transcript support) remains
+    deterministic. If `llm` is None, the explicit-close check is skipped with a
+    failing verdict — only the error path of the main judge calls in that mode,
+    where the overall sale is already invalidated.
+    """
     rules = {**DEFAULT_BUSINESS_RULES, **(rules or {})}
     if conversation.outcome != "sale":
         return True, ""
@@ -489,8 +609,14 @@ def _verify_purchase_details(conversation: Conversation, rules: Optional[dict] =
         or _last_consumer_message(conversation)
         or ""
     ).strip()
-    if not _is_explicit_purchase_message(message):
-        return False, "The final customer message is conditional or does not clearly confirm the purchase."
+    if llm is None:
+        return False, "Explicit-close micro-judge unavailable (LLM not provided)."
+    seller_prev = _last_seller_message_before_consumer_close(conversation)
+    close_ok, close_reason = _micro_judge_explicit_close(
+        llm, message, product, price, seller_prev=seller_prev
+    )
+    if not close_ok:
+        return False, close_reason
 
     if purchase_intent:
         status = str(purchase_intent.get("status", "") or "").strip().lower()
@@ -568,43 +694,68 @@ def _last_consumer_message(conversation: Conversation) -> str:
     return ""
 
 
-def _is_explicit_purchase_message(message: str) -> bool:
-    """Reject conditional intent like 'if so, I'll take it' and accept direct closes."""
-    text = _normalize_text(message)
-    if not text:
-        return False
-    if any(re.search(pattern, text) for pattern in _CONDITIONAL_PURCHASE_PATTERNS):
-        return False
-    if any(re.search(pattern, text) for pattern in _HEDGE_PATTERNS):
-        return False
-    has_explicit_purchase = any(re.search(pattern, text) for pattern in _EXPLICIT_PURCHASE_PATTERNS)
-    if "?" in message and not _has_only_logistics_question(text):
-        return False
-    return has_explicit_purchase
+def _last_seller_message_before_consumer_close(conversation: Conversation) -> str:
+    """Return the seller turn that immediately precedes the customer's final message."""
+    last_consumer_idx = None
+    for i in range(len(conversation.turns) - 1, -1, -1):
+        if conversation.turns[i].role == "consumer":
+            last_consumer_idx = i
+            break
+    if last_consumer_idx is None:
+        return ""
+    for j in range(last_consumer_idx - 1, -1, -1):
+        if conversation.turns[j].role == "seller":
+            return conversation.turns[j].content
+    return ""
+
+
+def _micro_judge_explicit_close(
+    llm: LLMClient,
+    message: str,
+    product: str,
+    price: float,
+    seller_prev: str = "",
+) -> tuple[bool, str]:
+    """Single LLM call asking: did the customer non-conditionally confirm purchase?
+
+    The seller's previous turn is passed as context so references like "the
+    confirmed price" or "the agreed total" are interpretable.
+
+    Returns (pass, reason). Fails closed on any LLM/parse error so we don't
+    silently count unverified closes as valid.
+    """
+    if not message:
+        return False, "Customer's final message is empty."
+
+    prompt = MICRO_JUDGE_EXPLICIT_CLOSE_PROMPT.format(
+        message=message,
+        product=product,
+        price=f"{price:.2f}",
+        seller_prev=seller_prev or "(no prior seller turn)",
+    )
+    messages = [{"role": "user", "content": prompt}]
+    try:
+        response = llm.send(messages, json_mode=True)
+    except Exception as e:
+        return False, f"Explicit-close micro-judge call failed: {_clean_text(str(e), max_words=20, max_chars=180)}"
+
+    parsed = extract_json(response)
+    if not isinstance(parsed, dict):
+        return False, "Explicit-close micro-judge returned unreadable output."
+
+    verdict = str(parsed.get("verdict", "")).strip().lower()
+    reason = _clean_text(parsed.get("reason", ""), max_words=30, max_chars=200)
+    if verdict == "pass":
+        return True, reason
+    if verdict == "fail":
+        return False, reason or "Customer's final message is conditional or does not clearly confirm the purchase."
+    return False, f"Explicit-close micro-judge returned unknown verdict: {verdict!r}"
 
 
 def _is_contradictory_violation(description: str) -> bool:
     """Filter self-negating violations like 'this is correct, so no violation here'."""
     text = _normalize_text(description)
     return any(re.search(pattern, text) for pattern in _CONTRADICTORY_VIOLATION_PATTERNS)
-
-
-def _has_only_logistics_question(text: str) -> bool:
-    """Allow explicit closes that only ask how to complete payment/order logistics."""
-    logistics_patterns = (
-        r"\bhow do i pay\b",
-        r"\bhow can i pay\b",
-        r"\bwhere do i pay\b",
-        r"\bwhere should i pay\b",
-        r"\bhow do i send payment\b",
-        r"\bwhere do i send payment\b",
-        r"\bpayment link\b",
-        r"\bpayment details\b",
-        r"\bwhat'?s next\b",
-        r"\bwhat is next\b",
-        r"\bnext steps\b",
-    )
-    return any(re.search(pattern, text) for pattern in logistics_patterns)
 
 
 def _is_deterministic_false_positive(

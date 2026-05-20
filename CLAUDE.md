@@ -50,6 +50,32 @@ Each experiment generates a timestamped directory with: `result.json`, `summary.
 - The judge uses low temperature (0.1) for consistency.
 - Profit = sum(price - cost) for valid sales only (no constraint violations).
 
+## Eval Infrastructure Principles
+
+Eval, calibration, and judge code in `arena/` and `evals/` is **domain-agnostic**. Domain knowledge lives in `workspace/` exclusively.
+
+- `workspace/constraints.md`, `workspace/catalog.md`, and `workspace/config.yaml` are the single source of truth for products, business rules, thresholds, and prices.
+- Code in `arena/` and `evals/` must NOT hardcode product names, rule lists, failure-mode regex, thresholds, or anything else that already lives in the workspace. If domain info is needed, parse it from the workspace at runtime.
+- The LLM judge (`arena/evaluation.py`) is the production evaluator. It already adapts to the workspace by passing `constraints.md` and `catalog.md` into every prompt. New eval tools should either delegate to the judge or be similarly config-driven.
+- Calibration scaffolding (`evals/calibrate_judge.py`) is the abstraction model: it works with Pass/Fail labels and bootstrap statistics, not domain semantics.
+- **Acceptance test for any new eval feature:** *Would it work unchanged on a workspace with different rules and products?* If no, the design is wrong — push the variation into `workspace/` files instead of into eval code.
+
+### Human-in-the-loop tasks
+
+When designing a labeling, review, or annotation flow:
+
+1. Classify every dimension as `code` (deterministic from code), `config` (parse from workspace), or `human` (subjective).
+2. Auto-resolve `code` and `config` dimensions.
+3. Show auto-results to the human as context. Ask the human only about `human`-tagged dimensions.
+
+If a human flow asks more than ~3 questions per item and most are obvious, redesign it.
+
+### Design validation gate
+
+Before writing any new module above ~100 lines in `arena/` or `evals/`, state the design in 3–5 lines (purpose, inputs, outputs, what's hardcoded, what's read from workspace) and confirm with the user. Skipping this gate is the most common cause of churn in this repo.
+
+If short/broad user feedback arrives ("es mucho", "no sirve si cambia X"), treat it as an architectural signal — stop building, surface the design question, redesign. Do not patch. Three rewrites of the same module in one session is a stop signal.
+
 ## Orchestration
 
 This project is designed to be run by an orchestrator agent (Codex, Claude Code). See `program.md` for orchestrator instructions. The orchestrator handles:
